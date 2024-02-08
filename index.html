@@ -1,0 +1,32 @@
+<html>
+    <head>
+        <title>Yahtzee</title>
+        <link rel="stylesheet" href="./styles.css">
+        <script src="./dist/main.mjs" type="module" defer></script>
+    </head>
+    <body>
+        <form id="start-game">
+            <h1>Start game</h1>
+            <form id="player-form">
+                <input type="text" id="player-text" placeholder="Player name">
+                <button type="submit">Add player</button>
+            </form>
+            <ol id="player-list"></ol>
+            <button type="submit">Start game</button>
+        </form>
+        <form id="game">
+            <h1>Yahtzee</h1>
+            <div id="player-display"></div>
+            <div class="dice"></div>
+            <button id="roll">Roll</button>
+            <table id="scorecard"></table>
+            <button id="next">Next</button>
+            <button type="submit">End game</button>
+        </form>
+        <form id="end-form">
+            <h1>Game over</h1>
+            <ol id="winner"></ol>
+            <button type="submit">Start new game</button>
+        </form>
+    </body>
+</html>
