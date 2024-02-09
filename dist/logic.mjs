@@ -1,7 +1,11 @@
-export class FreezableBase {
+//#region Base
+export class Freezable {
     frozen = false;
     get isFrozen() {
         return this.frozen;
+    }
+    toggle() {
+        this.frozen = !this.frozen;
     }
     freeze() {
         this.frozen = true;
@@ -10,7 +14,9 @@ export class FreezableBase {
         this.frozen = false;
     }
 }
-export class DieLogicBase extends FreezableBase {
+//#endregion
+//#region Die
+export class DieLogicBase extends Freezable {
     value = 0;
     sides = 0;
     constructor(sides) {
@@ -34,8 +40,10 @@ export class DieLogic extends DieLogicBase {
         return Math.floor(Math.random() * this.sidesCount) + 1;
     }
 }
-export class RuleLogicBase extends FreezableBase {
-    name = "";
+//#endregion
+//#region Rule
+export class RuleLogicBase extends Freezable {
+    name;
     score = 0;
     constructor(name) {
         super();
@@ -109,6 +117,9 @@ export class StraightLogic extends RuleLogicBase {
     }
 }
 export class FullHouseLogic extends RuleLogicBase {
+    constructor() {
+        super(new.target.name);
+    }
     calculate(...values) {
         const counts = values
             .reduce((acc, cur) => acc.set(cur, (acc.get(cur) || 0) + 1), new Map());
@@ -121,11 +132,17 @@ export class FullHouseLogic extends RuleLogicBase {
     }
 }
 export class ChanceLogic extends RuleLogicBase {
+    constructor() {
+        super(new.target.name);
+    }
     calculate(...values) {
         return values.reduce((acc, cur) => acc + cur, 0);
     }
 }
 export class YahtzeeLogic extends RuleLogicBase {
+    constructor() {
+        super(new.target.name);
+    }
     calculate(...values) {
         return values.every(val => val === values[0])
             ? 100
@@ -135,12 +152,40 @@ export class YahtzeeLogic extends RuleLogicBase {
 export class BonusLogic extends RuleLogicBase {
     target = 0;
     constructor(target) {
-        super(new.target.name);
+        super(new.target.name + target);
         this.target = target;
     }
     calculate(...values) {
         return values.reduce((acc, cur) => acc + cur, 0) >= this.target
-            ? 35
+            ? 25
             : 0;
     }
 }
+//#endregion
+//#region Player
+export class PlayerLogic {
+    name;
+    score = 0;
+    dice;
+    constructor(name, numDice = 5) {
+        this.name = name;
+        this.dice = Array.from({ length: numDice }, () => new DieLogic(6));
+    }
+    get playerName() {
+        return this.name;
+    }
+    get currentScore() {
+        return this.score;
+    }
+    get diceValues() {
+        return this.dice.map(die => die.currentValue);
+    }
+    roll() {
+        this.dice.forEach(die => die.roll());
+        this.score = this.calculate(...this.diceValues);
+    }
+    calculate(...values) {
+        return values.reduce((acc, cur) => acc + cur, 0);
+    }
+}
+//#endregion

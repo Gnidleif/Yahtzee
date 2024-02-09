@@ -1,7 +1,13 @@
-import * as testing from "./testing.mjs";
+import * as t from "./testing.mjs";
+import * as c from "./composite.mjs";
 
-const tests: testing.TestHandler[] = [
-    new testing.RuleTests(),
-];
+const verboseTesting = false;
+[
+    t.dieTests,
+    t.ruleTests,
+].forEach((th) => t.RunTests(th, verboseTesting));
 
-tests.forEach(testing.RunTests);
+const playerElement: HTMLElement = document.querySelector("#player-display")!;
+const player = new c.Player("Player 1");
+player.roll();
+playerElement.appendChild(player.display());
