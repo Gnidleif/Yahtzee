@@ -108,36 +108,36 @@ dieTests.add(new Test("DieLogic calculate",
     () => new l.DieLogic(6).calculate(),
     (x: number) => TestHandler.assertTrue(x >= 1 && x <= 6)));
 dieTests.add(new Test("DieLogic roll",
-    (d: l.DieLogic) => { d.roll(); return d.currentValue; },
+    (x: l.DieLogic) => { x.roll(); return x.currentValue; },
     (x: number) => TestHandler.assertTrue(x >= 1 && x <= 6),
     new l.DieLogic(6)));
 dieTests.add(new Test("DieLogic roll frozen",
-    (d: l.DieLogic) => { d.freeze(); d.roll(); return d.currentValue; },
+    (x: l.DieLogic) => { x.freeze(); x.roll(); return x.currentValue; },
     (x: number) => TestHandler.assertTrue(x === 0),
     new l.DieLogic(6)));
 dieTests.add(new Test("DieLogic roll unfrozen",
-    (d: l.DieLogic) => { d.freeze(); d.unfreeze(); d.roll(); return d.currentValue; },
+    (x: l.DieLogic) => { x.freeze(); x.unfreeze(); x.roll(); return x.currentValue; },
     (x: number) => TestHandler.assertTrue(x >= 1 && x <= 6),
     new l.DieLogic(6)));
 
 // Display tests
 dieTests.add(new Test("DieDisplay constructor",
     () => new d.DieDisplay(),
-    (x: d.IDisplay) => TestHandler.assertType(d.DieDisplay, x)));
+    (x: d.Displayable) => TestHandler.assertType(d.DieDisplay, x)));
 dieTests.add(new Test("DieDisplay display",
-    (d: d.DieDisplay) => d.display(),
+    (x: d.DieDisplay) => x.display(),
     (x: HTMLElement) => TestHandler.assertType(HTMLElement, x),
     new d.DieDisplay()));
 dieTests.add(new Test("DieDisplay update",
-    (d: d.DieDisplay) => { d.update(6); return d.dotsCount; },
+    (x: d.DieDisplay) => { x.update(6); return x.dotsCount; },
     (x: number) => TestHandler.assertEquals(6, x),
     new d.DieDisplay()));
 dieTests.add(new Test("DieDisplay out of range (low)",
-    (d: d.DieDisplay) => d.update(0),
+    (x: d.DieDisplay) => x.update(0),
     (x: Error) => TestHandler.assertType(RangeError, x),
     new d.DieDisplay()));
 dieTests.add(new Test("DieDisplay out of range (high)",
-    (d: d.DieDisplay) => d.update(7),
+    (x: d.DieDisplay) => x.update(7),
     (x: Error) => TestHandler.assertType(RangeError, x),
     new d.DieDisplay()));
 
@@ -146,15 +146,15 @@ dieTests.add(new Test("Die constructor",
     () => new c.Die(),
     (x: c.Composite) => TestHandler.assertType(c.Die, x)));
 dieTests.add(new Test("Die roll",
-    (d: c.Die) => { d.roll(); return d; },
-    (d: c.Die) => TestHandler.assertTrue(d.display().querySelectorAll(".dot").length > 0),
+    (x: c.Die) => { x.roll(); return x; },
+    (x: c.Die) => TestHandler.assertTrue(x.display().querySelectorAll(".dot").length > 0),
     new c.Die()));
 dieTests.add(new Test("Die freeze",
-    (d: c.Die) => { d.display().click(); return d.display().classList.contains("frozen"); },
+    (x: c.Die) => { x.display().click(); return x.display().classList.contains("frozen"); },
     (x: boolean) => TestHandler.assertTrue(x),
     new c.Die()));
 dieTests.add(new Test("Die unfreeze",
-    (d: c.Die) => { d.display().click(); d.display().click(); return d.display().classList.contains("frozen"); },
+    (x: c.Die) => { x.display().click(); x.display().click(); return x.display().classList.contains("frozen"); },
     (x: boolean) => TestHandler.assertFalse(x),
     new c.Die()));
 
@@ -172,11 +172,11 @@ ruleTests.add(new Test("NumberOfLogic calculate",
     () => new l.NumberOfLogic(6).calculate(1, 2, 3, 4, 5, 6),
     (x: number) => TestHandler.assertTrue(x === 6)));
 ruleTests.add(new Test("NumberOfLogic update",
-    (n: l.NumberOfLogic) => { n.update(1, 2, 3, 4, 5, 6); return n.currentScore; },
+    (x: l.NumberOfLogic) => { x.update(1, 2, 3, 4, 5, 6); return x.currentScore; },
     (x: number) => TestHandler.assertTrue(x === 6),
     new l.NumberOfLogic(6)));
 ruleTests.add(new Test("NumberOfLogic update frozen",
-    (n: l.NumberOfLogic) => { n.freeze(); n.update(1, 2, 3, 4, 5, 6); return n.currentScore; },
+    (x: l.NumberOfLogic) => { x.freeze(); x.update(1, 2, 3, 4, 5, 6); return x.currentScore; },
     (x: number) => TestHandler.assertTrue(x === 0),
     new l.NumberOfLogic(6)));
 ruleTests.add(new Test("NumberOfLogic name",
@@ -312,7 +312,7 @@ ruleTests.add(new Test("BonusLogic name",
 // Display tests
 ruleTests.add(new Test("RuleDisplay constructor",
     () => new d.RuleDisplay("test"),
-    (x: d.IDisplay) => TestHandler.assertType(d.RuleDisplay, x)));
+    (x: d.Displayable) => TestHandler.assertType(d.RuleDisplay, x)));
 ruleTests.add(new Test("RuleDisplay display",
     (r: d.RuleDisplay) => r.display(),
     (x: HTMLElement) => TestHandler.assertType(HTMLElement, x),

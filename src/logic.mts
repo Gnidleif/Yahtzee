@@ -218,16 +218,55 @@ export class BonusLogic extends RuleLogicBase {
 
 //#endregion
 
+//#region ScoreCard
+
+export class ScoreCardLogic extends Freezable {
+    private rules: RuleLogicBase[] = [
+        new NumberOfLogic(1),
+        new NumberOfLogic(2),
+        new NumberOfLogic(3),
+        new NumberOfLogic(4),
+        new NumberOfLogic(5),
+        new NumberOfLogic(6),
+        new OfAKindLogic(3),
+        new OfAKindLogic(4),
+        new FullHouseLogic(),
+        new StraightLogic(4),
+        new StraightLogic(5),
+        new ChanceLogic(),
+        new YahtzeeLogic(),
+    ];
+    private bonus: BonusLogic = new BonusLogic(63);
+
+    checkBonus(): boolean {
+        if (!this.bonus.isFrozen) {
+            const numberOfRules: NumberOfLogic[] = this.rules
+                .filter(rule => rule instanceof NumberOfLogic) as NumberOfLogic[];
+            this.bonus.update(...numberOfRules.map(rule => rule.currentScore));
+        }
+        return this.bonus.currentScore > 0;
+    }
+
+    calculate(...dieValues: number[]): number {
+        this.rules.forEach(rule => rule.update(...dieValues));
+        if (this.checkBonus()) {
+            this.bonus.freeze();
+            this.rules.splice(6, 0, this.bonus);
+        }
+        return this.rules.reduce((acc, cur) => acc + cur.currentScore, 0);
+    }
+}
+
+//#endregion
+
 //#region Player
 
 export class PlayerLogic implements ILogic {
     private name: string;
     private score: number = 0;
-    private dice: DieLogicBase[];
 
-    constructor(name: string, numDice: number = 5) {
+    constructor(name: string) {
         this.name = name;
-        this.dice = Array.from({ length: numDice }, () => new DieLogic(6));
     }
 
     get playerName(): string {
@@ -238,17 +277,12 @@ export class PlayerLogic implements ILogic {
         return this.score;
     }
 
-    get diceValues() : number[] {
-        return this.dice.map(die => die.currentValue);
+    update(...scores: number[]) {
+        this.score = this.calculate(...scores);
     }
 
-    roll(): void {
-        this.dice.forEach(die => die.roll());
-        this.score = this.calculate(...this.diceValues);
-    }
-
-    calculate(...values: number[]): number {
-        return values.reduce((acc, cur) => acc + cur, 0);
+    calculate(...scores: number[]): number {
+        return scores.reduce((acc, cur) => acc + cur, 0);
     }
 }
 

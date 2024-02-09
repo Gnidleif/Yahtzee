@@ -1,11 +1,6 @@
-//#region Base classes
+//#region Base
 
-export interface IDisplay {
-    update(...values: number[]): void;
-    display(): HTMLElement;
-}
-
-export abstract class Displayable implements IDisplay {
+export abstract class Displayable {
     protected element: HTMLElement;
 
     constructor(element: HTMLElement) {
@@ -16,13 +11,12 @@ export abstract class Displayable implements IDisplay {
         return this.element;
     }
 
-    abstract update(...values: number[]): void;
     abstract display(): HTMLElement;
 }
 
 //#endregion
 
-//#region Die classes
+//#region Die
 
 export class DieDisplay extends Displayable {
     private dots: HTMLDivElement[] = [];
@@ -36,7 +30,7 @@ export class DieDisplay extends Displayable {
         return this.dots.length;
     }
 
-    override update(dotCount: number): void {
+    update(dotCount: number): void {
         if (dotCount < 1 || dotCount > 6) {
             throw new RangeError("Dot count must be between 1 and 6");
         }
@@ -57,7 +51,7 @@ export class DieDisplay extends Displayable {
 
 //#endregion
 
-//#region Rule classes
+//#region Rule
 
 export class RuleDisplay extends Displayable {
     private id: string;
@@ -80,7 +74,7 @@ export class RuleDisplay extends Displayable {
         this.element.appendChild(scoreCell);
     }
 
-    override update(score: number): void {
+    update(score: number): void {
         if (score < 0) {
             throw new RangeError("Score must be greater than or equal to 0");
         }
@@ -95,48 +89,63 @@ export class RuleDisplay extends Displayable {
 
 //#endregion
 
-export class PlayerDisplay extends Displayable {
-    private name: string;
-    private dice: DieDisplay[] = [];
-    private scoreText: string = "";
+//#region ScoreCard
 
-    constructor(name: string, diceCount: number = 5) {
-        super(document.createElement("section"));
-        this.name = name;
-        this.element.classList.add("player");
-        const nameElement: HTMLHeadingElement = document.createElement("h2");
-        nameElement.textContent = this.name;
-        this.element.appendChild(nameElement);
+export class ScoreCardDisplay extends Displayable {
+    constructor() {
+        super(document.createElement("table"));
+        this.element.classList.add("score-card");
 
-        const scoreElement: HTMLHeadingElement = document.createElement("h3");
-        scoreElement.classList.add("score");
-        scoreElement.textContent = this.scoreText;
-        this.element.appendChild(scoreElement);
+        const header: HTMLTableRowElement = document.createElement("tr");
+        const nameHeader: HTMLTableCellElement = document.createElement("th");
+        nameHeader.textContent = "Name";
+        header.appendChild(nameHeader);
 
-        const diceElement: HTMLDivElement = document.createElement("div");
-        diceElement.classList.add("dice");
-        this.element.appendChild(diceElement);
-        this.dice = Array.from({ length: diceCount }, () => new DieDisplay());
-
-        const rollButton: HTMLButtonElement = document.createElement("button");
-        rollButton.id = "roll";
-        rollButton.textContent = "Roll";
-        this.element.appendChild(rollButton);
+        const scoreHeader: HTMLTableCellElement = document.createElement("th");
+        scoreHeader.textContent = "Score";
+        header.appendChild(scoreHeader);
+        this.element.appendChild(header);
     }
 
-    override update(score: number, ...dieValues: number[]): void {
-        if (score < 0) {
-            throw new RangeError("Score must be greater than or equal to 0");
-        }
-        this.scoreText = `Score: ${score}`;
-        this.dice.forEach((die, index) => die.update(dieValues[index]));
-    }
-
-    override display(): HTMLElement {
-        const diceElement: HTMLDivElement = this.element.querySelector(".dice")!;
-        diceElement.querySelectorAll(".die")?.forEach(die => die.remove());
-        this.dice.forEach(die => diceElement.appendChild(die.display()));
-        this.element.querySelector(".score")!.textContent = this.scoreText;
+    display(): HTMLElement {
         return this.element;
     }
 }
+
+//#endregion
+
+//#region Player
+
+export class PlayerDisplay extends Displayable {
+    score: number = 0;
+
+    constructor(id: string) {
+        super(document.createElement("section"));
+        this.element.classList.add("player");
+        this.element.id = id;
+
+        const name: HTMLHeadingElement = document.createElement("h2");
+        name.textContent = id;
+        this.element.appendChild(name);
+
+        const score: HTMLHeadingElement = document.createElement("h3");
+        score.classList.add("score");
+        score.textContent = this.score.toString();
+        this.element.appendChild(score);
+
+        const diceSection: HTMLDivElement = document.createElement("div");
+        diceSection.classList.add("dice");
+        this.element.appendChild(diceSection);
+    }
+
+    update(score: number): void {
+        this.score = score;
+    }
+
+    display(): HTMLElement {
+        this.element.querySelector(".score")!.textContent = `Score: ${this.score}`;
+        return this.element;
+    }
+}
+
+//#endregion

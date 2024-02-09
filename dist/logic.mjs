@@ -162,14 +162,48 @@ export class BonusLogic extends RuleLogicBase {
     }
 }
 //#endregion
+//#region ScoreCard
+export class ScoreCardLogic extends Freezable {
+    rules = [
+        new NumberOfLogic(1),
+        new NumberOfLogic(2),
+        new NumberOfLogic(3),
+        new NumberOfLogic(4),
+        new NumberOfLogic(5),
+        new NumberOfLogic(6),
+        new OfAKindLogic(3),
+        new OfAKindLogic(4),
+        new FullHouseLogic(),
+        new StraightLogic(4),
+        new StraightLogic(5),
+        new ChanceLogic(),
+        new YahtzeeLogic(),
+    ];
+    bonus = new BonusLogic(63);
+    checkBonus() {
+        if (!this.bonus.isFrozen) {
+            const numberOfRules = this.rules
+                .filter(rule => rule instanceof NumberOfLogic);
+            this.bonus.update(...numberOfRules.map(rule => rule.currentScore));
+        }
+        return this.bonus.currentScore > 0;
+    }
+    calculate(...dieValues) {
+        this.rules.forEach(rule => rule.update(...dieValues));
+        if (this.checkBonus()) {
+            this.bonus.freeze();
+            this.rules.splice(6, 0, this.bonus);
+        }
+        return this.rules.reduce((acc, cur) => acc + cur.currentScore, 0);
+    }
+}
+//#endregion
 //#region Player
 export class PlayerLogic {
     name;
     score = 0;
-    dice;
-    constructor(name, numDice = 5) {
+    constructor(name) {
         this.name = name;
-        this.dice = Array.from({ length: numDice }, () => new DieLogic(6));
     }
     get playerName() {
         return this.name;
@@ -177,15 +211,11 @@ export class PlayerLogic {
     get currentScore() {
         return this.score;
     }
-    get diceValues() {
-        return this.dice.map(die => die.currentValue);
+    update(...scores) {
+        this.score = this.calculate(...scores);
     }
-    roll() {
-        this.dice.forEach(die => die.roll());
-        this.score = this.calculate(...this.diceValues);
-    }
-    calculate(...values) {
-        return values.reduce((acc, cur) => acc + cur, 0);
+    calculate(...scores) {
+        return scores.reduce((acc, cur) => acc + cur, 0);
     }
 }
 //#endregion

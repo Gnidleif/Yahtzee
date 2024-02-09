@@ -85,20 +85,20 @@ export const dieTests = new class DieTests extends TestHandler {
 // Logic tests
 dieTests.add(new Test("DieLogic constructor", () => new l.DieLogic(6), (x) => TestHandler.assertType(l.DieLogic, x)));
 dieTests.add(new Test("DieLogic calculate", () => new l.DieLogic(6).calculate(), (x) => TestHandler.assertTrue(x >= 1 && x <= 6)));
-dieTests.add(new Test("DieLogic roll", (d) => { d.roll(); return d.currentValue; }, (x) => TestHandler.assertTrue(x >= 1 && x <= 6), new l.DieLogic(6)));
-dieTests.add(new Test("DieLogic roll frozen", (d) => { d.freeze(); d.roll(); return d.currentValue; }, (x) => TestHandler.assertTrue(x === 0), new l.DieLogic(6)));
-dieTests.add(new Test("DieLogic roll unfrozen", (d) => { d.freeze(); d.unfreeze(); d.roll(); return d.currentValue; }, (x) => TestHandler.assertTrue(x >= 1 && x <= 6), new l.DieLogic(6)));
+dieTests.add(new Test("DieLogic roll", (x) => { x.roll(); return x.currentValue; }, (x) => TestHandler.assertTrue(x >= 1 && x <= 6), new l.DieLogic(6)));
+dieTests.add(new Test("DieLogic roll frozen", (x) => { x.freeze(); x.roll(); return x.currentValue; }, (x) => TestHandler.assertTrue(x === 0), new l.DieLogic(6)));
+dieTests.add(new Test("DieLogic roll unfrozen", (x) => { x.freeze(); x.unfreeze(); x.roll(); return x.currentValue; }, (x) => TestHandler.assertTrue(x >= 1 && x <= 6), new l.DieLogic(6)));
 // Display tests
 dieTests.add(new Test("DieDisplay constructor", () => new d.DieDisplay(), (x) => TestHandler.assertType(d.DieDisplay, x)));
-dieTests.add(new Test("DieDisplay display", (d) => d.display(), (x) => TestHandler.assertType(HTMLElement, x), new d.DieDisplay()));
-dieTests.add(new Test("DieDisplay update", (d) => { d.update(6); return d.dotsCount; }, (x) => TestHandler.assertEquals(6, x), new d.DieDisplay()));
-dieTests.add(new Test("DieDisplay out of range (low)", (d) => d.update(0), (x) => TestHandler.assertType(RangeError, x), new d.DieDisplay()));
-dieTests.add(new Test("DieDisplay out of range (high)", (d) => d.update(7), (x) => TestHandler.assertType(RangeError, x), new d.DieDisplay()));
+dieTests.add(new Test("DieDisplay display", (x) => x.display(), (x) => TestHandler.assertType(HTMLElement, x), new d.DieDisplay()));
+dieTests.add(new Test("DieDisplay update", (x) => { x.update(6); return x.dotsCount; }, (x) => TestHandler.assertEquals(6, x), new d.DieDisplay()));
+dieTests.add(new Test("DieDisplay out of range (low)", (x) => x.update(0), (x) => TestHandler.assertType(RangeError, x), new d.DieDisplay()));
+dieTests.add(new Test("DieDisplay out of range (high)", (x) => x.update(7), (x) => TestHandler.assertType(RangeError, x), new d.DieDisplay()));
 // Composite tests
 dieTests.add(new Test("Die constructor", () => new c.Die(), (x) => TestHandler.assertType(c.Die, x)));
-dieTests.add(new Test("Die roll", (d) => { d.roll(); return d; }, (d) => TestHandler.assertTrue(d.display().querySelectorAll(".dot").length > 0), new c.Die()));
-dieTests.add(new Test("Die freeze", (d) => { d.display().click(); return d.display().classList.contains("frozen"); }, (x) => TestHandler.assertTrue(x), new c.Die()));
-dieTests.add(new Test("Die unfreeze", (d) => { d.display().click(); d.display().click(); return d.display().classList.contains("frozen"); }, (x) => TestHandler.assertFalse(x), new c.Die()));
+dieTests.add(new Test("Die roll", (x) => { x.roll(); return x; }, (x) => TestHandler.assertTrue(x.display().querySelectorAll(".dot").length > 0), new c.Die()));
+dieTests.add(new Test("Die freeze", (x) => { x.display().click(); return x.display().classList.contains("frozen"); }, (x) => TestHandler.assertTrue(x), new c.Die()));
+dieTests.add(new Test("Die unfreeze", (x) => { x.display().click(); x.display().click(); return x.display().classList.contains("frozen"); }, (x) => TestHandler.assertFalse(x), new c.Die()));
 //#endregion
 //#region Rule tests
 export const ruleTests = new class RuleTests extends TestHandler {
@@ -106,8 +106,8 @@ export const ruleTests = new class RuleTests extends TestHandler {
 // Logic tests
 ruleTests.add(new Test("NumberOfLogic constructor", () => new l.NumberOfLogic(6), (x) => TestHandler.assertType(l.NumberOfLogic, x)));
 ruleTests.add(new Test("NumberOfLogic calculate", () => new l.NumberOfLogic(6).calculate(1, 2, 3, 4, 5, 6), (x) => TestHandler.assertTrue(x === 6)));
-ruleTests.add(new Test("NumberOfLogic update", (n) => { n.update(1, 2, 3, 4, 5, 6); return n.currentScore; }, (x) => TestHandler.assertTrue(x === 6), new l.NumberOfLogic(6)));
-ruleTests.add(new Test("NumberOfLogic update frozen", (n) => { n.freeze(); n.update(1, 2, 3, 4, 5, 6); return n.currentScore; }, (x) => TestHandler.assertTrue(x === 0), new l.NumberOfLogic(6)));
+ruleTests.add(new Test("NumberOfLogic update", (x) => { x.update(1, 2, 3, 4, 5, 6); return x.currentScore; }, (x) => TestHandler.assertTrue(x === 6), new l.NumberOfLogic(6)));
+ruleTests.add(new Test("NumberOfLogic update frozen", (x) => { x.freeze(); x.update(1, 2, 3, 4, 5, 6); return x.currentScore; }, (x) => TestHandler.assertTrue(x === 0), new l.NumberOfLogic(6)));
 ruleTests.add(new Test("NumberOfLogic name", (n) => n.ruleName, (x) => TestHandler.assertEquals("NumberOf", x), new l.NumberOfLogic(6)));
 ruleTests.add(new Test("OfAKindLogic constructor", () => new l.OfAKindLogic(3), (x) => TestHandler.assertType(l.OfAKindLogic, x)));
 ruleTests.add(new Test("OfAKindLogic calculate", () => new l.OfAKindLogic(3).calculate(1, 1, 1, 2, 2), (x) => TestHandler.assertTrue(x === 3)));
