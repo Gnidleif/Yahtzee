@@ -28,86 +28,27 @@ export class DieDisplay extends Displayable {
             dot.classList.add("dot");
             return dot;
         });
-    }
-    display() {
-        this.element.querySelectorAll(".dot")?.forEach(dot => dot.remove());
-        this.dots.forEach(dot => this.element.appendChild(dot));
-        return this.element;
+        this.element.replaceChildren(...this.dots);
     }
 }
 //#endregion
 //#region Rule
 export class RuleDisplay extends Displayable {
-    id;
-    scoreText = "";
+    scoreCell;
     constructor(id) {
         super(document.createElement("tr"));
-        this.id = id;
         this.element.classList.add("rule");
-        this.element.id = this.id;
         const nameCell = document.createElement("td");
-        nameCell.textContent = this.id;
+        nameCell.textContent = id;
         this.element.appendChild(nameCell);
-        const scoreCell = document.createElement("td");
-        scoreCell.classList.add("score");
-        scoreCell.textContent = this.scoreText;
-        this.element.appendChild(scoreCell);
+        this.scoreCell = document.createElement("td");
+        this.element.appendChild(this.scoreCell);
     }
     update(score) {
         if (score < 0) {
             throw new RangeError("Score must be greater than or equal to 0");
         }
-        this.scoreText = score.toString();
-    }
-    display() {
-        this.element.querySelector(".score").textContent = this.scoreText;
-        return this.element;
-    }
-}
-//#endregion
-//#region ScoreCard
-export class ScoreCardDisplay extends Displayable {
-    constructor() {
-        super(document.createElement("table"));
-        this.element.classList.add("score-card");
-        const header = document.createElement("tr");
-        const nameHeader = document.createElement("th");
-        nameHeader.textContent = "Name";
-        header.appendChild(nameHeader);
-        const scoreHeader = document.createElement("th");
-        scoreHeader.textContent = "Score";
-        header.appendChild(scoreHeader);
-        this.element.appendChild(header);
-    }
-    display() {
-        return this.element;
-    }
-}
-//#endregion
-//#region Player
-export class PlayerDisplay extends Displayable {
-    score = 0;
-    constructor(id) {
-        super(document.createElement("section"));
-        this.element.classList.add("player");
-        this.element.id = id;
-        const name = document.createElement("h2");
-        name.textContent = id;
-        this.element.appendChild(name);
-        const score = document.createElement("h3");
-        score.classList.add("score");
-        score.textContent = this.score.toString();
-        this.element.appendChild(score);
-        const diceSection = document.createElement("div");
-        diceSection.classList.add("dice");
-        this.element.appendChild(diceSection);
-    }
-    update(score) {
-        this.score = score;
-    }
-    display() {
-        this.element.querySelector(".score").textContent = `Score: ${this.score}`;
-        return this.element;
+        this.scoreCell.textContent = score.toString();
     }
 }
 //#endregion

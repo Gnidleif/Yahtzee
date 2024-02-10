@@ -125,7 +125,7 @@ dieTests.add(new Test("DieDisplay constructor",
     () => new d.DieDisplay(),
     (x: d.Displayable) => TestHandler.assertType(d.DieDisplay, x)));
 dieTests.add(new Test("DieDisplay display",
-    (x: d.DieDisplay) => x.display(),
+    (x: d.DieDisplay) => x.htmlElement,
     (x: HTMLElement) => TestHandler.assertType(HTMLElement, x),
     new d.DieDisplay()));
 dieTests.add(new Test("DieDisplay update",
@@ -144,7 +144,7 @@ dieTests.add(new Test("DieDisplay out of range (high)",
 // Composite tests
 dieTests.add(new Test("Die constructor",
     () => new c.Die(),
-    (x: c.Composite) => TestHandler.assertType(c.Die, x)));
+    (x: c.Die) => TestHandler.assertType(c.Die, x)));
 dieTests.add(new Test("Die roll",
     (x: c.Die) => { x.roll(); return x; },
     (x: c.Die) => TestHandler.assertTrue(x.display().querySelectorAll(".dot").length > 0),
@@ -172,16 +172,16 @@ ruleTests.add(new Test("NumberOfLogic calculate",
     () => new l.NumberOfLogic(6).calculate(1, 2, 3, 4, 5, 6),
     (x: number) => TestHandler.assertTrue(x === 6)));
 ruleTests.add(new Test("NumberOfLogic update",
-    (x: l.NumberOfLogic) => { x.update(1, 2, 3, 4, 5, 6); return x.currentScore; },
+    (x: l.NumberOfLogic) => { x.update(1, 2, 3, 4, 5, 6); return x.score; },
     (x: number) => TestHandler.assertTrue(x === 6),
     new l.NumberOfLogic(6)));
 ruleTests.add(new Test("NumberOfLogic update frozen",
-    (x: l.NumberOfLogic) => { x.freeze(); x.update(1, 2, 3, 4, 5, 6); return x.currentScore; },
+    (x: l.NumberOfLogic) => { x.freeze(); x.update(1, 2, 3, 4, 5, 6); return x.score; },
     (x: number) => TestHandler.assertTrue(x === 0),
     new l.NumberOfLogic(6)));
 ruleTests.add(new Test("NumberOfLogic name",
     (n: l.NumberOfLogic) => n.ruleName,
-    (x: string) => TestHandler.assertEquals("NumberOf", x),
+    (x: string) => TestHandler.assertEquals("NumberOf6", x),
     new l.NumberOfLogic(6)));
 
 ruleTests.add(new Test("OfAKindLogic constructor",
@@ -191,11 +191,11 @@ ruleTests.add(new Test("OfAKindLogic calculate",
     () => new l.OfAKindLogic(3).calculate(1, 1, 1, 2, 2),
     (x: number) => TestHandler.assertTrue(x === 3)));
 ruleTests.add(new Test("OfAKindLogic update",
-    (o: l.OfAKindLogic) => { o.update(1, 1, 1, 2, 2); return o.currentScore; },
+    (o: l.OfAKindLogic) => { o.update(1, 1, 1, 2, 2); return o.score; },
     (x: number) => TestHandler.assertTrue(x === 3),
     new l.OfAKindLogic(3)));
 ruleTests.add(new Test("OfAKindLogic update frozen",
-    (o: l.OfAKindLogic) => { o.freeze(); o.update(1, 1, 1, 2, 2); return o.currentScore; },
+    (o: l.OfAKindLogic) => { o.freeze(); o.update(1, 1, 1, 2, 2); return o.score; },
     (x: number) => TestHandler.assertTrue(x === 0),
     new l.OfAKindLogic(3)));
 ruleTests.add(new Test("OfAKindLogic name",
@@ -210,11 +210,11 @@ ruleTests.add(new Test("StraightLogic(4) calculate",
     () => new l.StraightLogic(4).calculate(1, 2, 3, 4, 5),
     (x: number) => TestHandler.assertTrue(x === 40)));
 ruleTests.add(new Test("StraightLogic(4) update",
-    (s: l.StraightLogic) => { s.update(1, 2, 3, 4, 5); return s.currentScore; },
+    (s: l.StraightLogic) => { s.update(1, 2, 3, 4, 5); return s.score; },
     (x: number) => TestHandler.assertTrue(x === 40),
     new l.StraightLogic(4)));
 ruleTests.add(new Test("StraightLogic(4) update frozen",
-    (s: l.StraightLogic) => { s.freeze(); s.update(1, 2, 3, 4, 5); return s.currentScore; },
+    (s: l.StraightLogic) => { s.freeze(); s.update(1, 2, 3, 4, 5); return s.score; },
     (x: number) => TestHandler.assertTrue(x === 0),
     new l.StraightLogic(4)));
 ruleTests.add(new Test("StraightLogic(4) name",
@@ -226,7 +226,7 @@ ruleTests.add(new Test("StraightLogic(5) calculate",
     (x: number) => TestHandler.assertTrue(x === 50),
     new l.StraightLogic(5)));
 ruleTests.add(new Test("StraightLogic(5) update",
-    (s: l.StraightLogic) => { s.update(1, 2, 3, 4, 5); return s.currentScore; },
+    (s: l.StraightLogic) => { s.update(1, 2, 3, 4, 5); return s.score; },
     (x: number) => TestHandler.assertTrue(x === 50),
     new l.StraightLogic(5)));
 
@@ -237,11 +237,11 @@ ruleTests.add(new Test("FullHouseLogic calculate",
     () => new l.FullHouseLogic().calculate(1, 1, 2, 2, 2),
     (x: number) => TestHandler.assertTrue(x === 50)));
 ruleTests.add(new Test("FullHouseLogic update",
-    (f: l.FullHouseLogic) => { f.update(1, 1, 2, 2, 2); return f.currentScore; },
+    (f: l.FullHouseLogic) => { f.update(1, 1, 2, 2, 2); return f.score; },
     (x: number) => TestHandler.assertTrue(x === 50),
     new l.FullHouseLogic()));
 ruleTests.add(new Test("FullHouseLogic update frozen",
-    (f: l.FullHouseLogic) => { f.freeze(); f.update(1, 1, 2, 2, 2); return f.currentScore; },
+    (f: l.FullHouseLogic) => { f.freeze(); f.update(1, 1, 2, 2, 2); return f.score; },
     (x: number) => TestHandler.assertTrue(x === 0),
     new l.FullHouseLogic()));
 ruleTests.add(new Test("FullHouseLogic name",
@@ -256,11 +256,11 @@ ruleTests.add(new Test("ChanceLogic calculate",
     () => new l.ChanceLogic().calculate(1, 2, 3, 4, 5),
     (x: number) => TestHandler.assertTrue(x === 15)));
 ruleTests.add(new Test("ChanceLogic update",
-    (c: l.ChanceLogic) => { c.update(1, 2, 3, 4, 5); return c.currentScore; },
+    (c: l.ChanceLogic) => { c.update(1, 2, 3, 4, 5); return c.score; },
     (x: number) => TestHandler.assertTrue(x === 15),
     new l.ChanceLogic()));
 ruleTests.add(new Test("ChanceLogic update frozen",
-    (c: l.ChanceLogic) => { c.freeze(); c.update(1, 2, 3, 4, 5); return c.currentScore; },
+    (c: l.ChanceLogic) => { c.freeze(); c.update(1, 2, 3, 4, 5); return c.score; },
     (x: number) => TestHandler.assertTrue(x === 0),
     new l.ChanceLogic()));
 ruleTests.add(new Test("ChanceLogic name",
@@ -275,11 +275,11 @@ ruleTests.add(new Test("YahtzeeLogic calculate",
     () => new l.YahtzeeLogic().calculate(1, 1, 1, 1, 1),
     (x: number) => TestHandler.assertTrue(x === 100)));
 ruleTests.add(new Test("YahtzeeLogic update",
-    (y: l.YahtzeeLogic) => { y.update(1, 1, 1, 1, 1); return y.currentScore; },
+    (y: l.YahtzeeLogic) => { y.update(1, 1, 1, 1, 1); return y.score; },
     (x: number) => TestHandler.assertTrue(x === 100),
     new l.YahtzeeLogic()));
 ruleTests.add(new Test("YahtzeeLogic update frozen",
-    (y: l.YahtzeeLogic) => { y.freeze(); y.update(1, 1, 1, 1, 1); return y.currentScore; },
+    (y: l.YahtzeeLogic) => { y.freeze(); y.update(1, 1, 1, 1, 1); return y.score; },
     (x: number) => TestHandler.assertTrue(x === 0),
     new l.YahtzeeLogic()));
 ruleTests.add(new Test("YahtzeeLogic name",
@@ -297,11 +297,11 @@ ruleTests.add(new Test("BonusLogic calculate (fail)",
     () => new l.BonusLogic(20).calculate(1, 1, 1, 1, 1),
     (x: number) => TestHandler.assertTrue(x === 0)));
 ruleTests.add(new Test("BonusLogic update",
-    (b: l.BonusLogic) => { b.update(5, 5, 5, 5, 5); return b.currentScore; },
+    (b: l.BonusLogic) => { b.update(5, 5, 5, 5, 5); return b.score; },
     (x: number) => TestHandler.assertTrue(x === 25),
     new l.BonusLogic(20)));
 ruleTests.add(new Test("BonusLogic update frozen",
-    (b: l.BonusLogic) => { b.freeze(); b.update(5, 5, 5, 5, 5); return b.currentScore; },
+    (b: l.BonusLogic) => { b.freeze(); b.update(5, 5, 5, 5, 5); return b.score; },
     (x: number) => TestHandler.assertTrue(x === 0),
     new l.BonusLogic(20)));
 ruleTests.add(new Test("BonusLogic name",
@@ -314,11 +314,11 @@ ruleTests.add(new Test("RuleDisplay constructor",
     () => new d.RuleDisplay("test"),
     (x: d.Displayable) => TestHandler.assertType(d.RuleDisplay, x)));
 ruleTests.add(new Test("RuleDisplay display",
-    (r: d.RuleDisplay) => r.display(),
+    (r: d.RuleDisplay) => r.htmlElement,
     (x: HTMLElement) => TestHandler.assertType(HTMLElement, x),
     new d.RuleDisplay("test")));
 ruleTests.add(new Test("RuleDisplay update",
-    (r: d.RuleDisplay) => { r.update(50); return r.display().querySelector(".score")!; },
+    (r: d.RuleDisplay) => { r.update(50); return r.htmlElement.children[1]; },
     (x: HTMLElement) => TestHandler.assertEquals("50", x.textContent),
     new d.RuleDisplay("test")));
 ruleTests.add(new Test("RuleDisplay out of range",
@@ -329,18 +329,18 @@ ruleTests.add(new Test("RuleDisplay out of range",
 // Composite tests
 ruleTests.add(new Test("Rule constructor",
     () => new c.Rule(new l.NumberOfLogic(6)),
-    (x: c.Composite) => TestHandler.assertType(c.Rule, x)));
+    (x: c.Rule) => TestHandler.assertType(c.Rule, x)));
 ruleTests.add(new Test("Rule check",
-    (r: c.Rule) => { r.check(1, 2, 3, 4, 5, 6); return r.display(); },
-    (e: HTMLElement) => TestHandler.assertTrue(e.querySelector(".score")!.textContent === "6"),
+    (r: c.Rule) => { r.update(1, 2, 3, 4, 5, 6); return r.display(); },
+    (e: HTMLElement) => TestHandler.assertTrue(e.children[1].textContent === "6"),
     new c.Rule(new l.NumberOfLogic(6))));
 ruleTests.add(new Test("Rule freeze",
-    (r: c.Rule) => { r.htmlElement.click(); return r.htmlElement.classList.contains("frozen"); },
+    (r: c.Rule) => { r.display().click(); return r.isFrozen; },
     (x: boolean) => TestHandler.assertTrue(x),
     new c.Rule(new l.NumberOfLogic(6))));
 ruleTests.add(new Test("Rule unfreeze",
-    (r: c.Rule) => { r.htmlElement.click(); r.htmlElement.click(); return r.htmlElement.classList.contains("frozen"); },
-    (x: boolean) => TestHandler.assertFalse(x),
+    (r: c.Rule) => { r.display().click(); r.display().click(); return r.isFrozen; },
+    (x: boolean) => TestHandler.assertTrue(x),
     new c.Rule(new l.NumberOfLogic(6))));
 
 //#endregion

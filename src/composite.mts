@@ -7,19 +7,15 @@ import {
     Displayable,
     DieDisplay,
     RuleDisplay,
-    PlayerDisplay,
-    ScoreCardDisplay,
 } from "./display.mjs";
 import {
     ILogic,
     DieLogic,
     Freezable,
     RuleLogicBase,
-    ScoreCardLogic,
-    PlayerLogic,
 } from "./logic.mjs";
 
-export abstract class Composite {
+abstract class Composite {
     protected displayComponent: Displayable;
     protected logicComponent: ILogic;
 
@@ -28,93 +24,71 @@ export abstract class Composite {
         this.logicComponent = logic;
     }
 
-    get htmlElement(): HTMLElement {
-        return this.displayComponent.htmlElement;
-    }
-
-    calculate(...values: number[]): number {
-        return this.logicComponent.calculate(...values);
-    }
-
     display(): HTMLElement {
-        return this.displayComponent.display();
+        return this.displayComponent.htmlElement;
     }
 }
 
-export class FreezableComposite extends Composite {
-    declare logicComponent: Freezable;
+class FreezableComposite extends Composite {
+    declare protected logicComponent: Freezable;
 
     constructor(display: Displayable, logic: Freezable) {
         super(display, logic);
+        this.displayComponent.htmlElement.classList.add("freezable");
+    }
 
-        this.htmlElement.addEventListener("click", () => {
-            this.logicComponent.toggle();
-            this.htmlElement.classList.toggle("frozen");
-        });
+    get isFrozen(): boolean {
+        return this.logicComponent.isFrozen;
+    }
+
+    toggle(): void {
+        this.logicComponent.toggle();
+        this.displayComponent.htmlElement.classList.toggle("frozen");
     }
 }
 
 export class Die extends FreezableComposite {
-    declare logicComponent: DieLogic;
-    declare displayComponent: DieDisplay;
+    declare protected logicComponent: DieLogic;
+    declare protected displayComponent: DieDisplay;
 
     constructor(logicObject: Freezable = new DieLogic(6)) {
         super(new DieDisplay(), logicObject);
+
+        this.displayComponent.htmlElement.addEventListener("click", () => {
+            this.toggle();
+        });
+    }
+
+    get currentValue(): number {
+        return this.logicComponent.currentValue;
     }
 
     roll(): void {
         this.logicComponent.roll();
-        this.displayComponent.update(this.logicComponent.currentValue);
+        this.displayComponent.update(this.currentValue);
     }
 }
 
 export class Rule extends FreezableComposite {
-    declare logicComponent: RuleLogicBase;
-    declare displayComponent: RuleDisplay;
+    declare protected logicComponent: RuleLogicBase;
+    declare protected displayComponent: RuleDisplay;
 
     constructor(logicObject: RuleLogicBase) {
         super(new RuleDisplay(logicObject.ruleName), logicObject);
+
+        this.displayComponent.htmlElement.addEventListener("click", () => {
+            if (!this.isFrozen) {
+                this.toggle();
+            }
+        });
     }
 
-    check(...values: number[]): void {
+    get score(): number {
+        return this.logicComponent.score;
+    }
+
+    update(...values: number[]): void {
         this.logicComponent.update(...values);
-        this.displayComponent.update(this.logicComponent.currentScore);
-    }
-}
-
-export class ScoreCard extends Composite {
-    declare logicComponent: ScoreCardLogic;
-    declare displayComponent: ScoreCardDisplay;
-
-    constructor() {
-        super(new ScoreCardDisplay(), new ScoreCardLogic());
-    }
-}
-
-export class Player extends Composite {
-    declare logicComponent: PlayerLogic;
-    declare displayComponent: PlayerDisplay;
-
-    private dice: Die[];
-    private scoreCard: ScoreCard = new ScoreCard();
-
-    constructor(name: string, dieCount: number = 5) {
-        super(new PlayerDisplay(name), new PlayerLogic(name));
-        this.dice = Array.from({ length: dieCount }, () => new Die());
-
-        this.htmlElement.appendChild(this.scoreCard.display());
-
-        // Rolling will be done by the Game class later
-    }
-
-    rollDice() {
-        this.dice.forEach(die => die.roll());
-        this.scoreCard.calculate(...this.dice.map(die => die.logicComponent.currentValue));
-    }
-
-    display(): HTMLElement {
-        this.htmlElement.querySelector(".dice")!.replaceChildren(...this.dice.map(die => die.display()));
-        this.htmlElement.querySelector(".score-card")!.replaceWith(this.scoreCard.display());
-        return this.displayComponent.display();
+        this.displayComponent.update(this.score);
     }
 }

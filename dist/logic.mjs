@@ -44,7 +44,7 @@ export class DieLogic extends DieLogicBase {
 //#region Rule
 export class RuleLogicBase extends Freezable {
     name;
-    score = 0;
+    currentScore = 0;
     constructor(name) {
         super();
         this.name = (name || new.target.name).replace("Logic", "");
@@ -52,20 +52,23 @@ export class RuleLogicBase extends Freezable {
     get ruleName() {
         return this.name;
     }
-    get currentScore() {
-        return this.score;
+    get score() {
+        return this.currentScore;
     }
     update(...values) {
         if (!this.isFrozen) {
-            this.score = this.calculate(...values);
+            this.currentScore = this.calculate(...values);
         }
     }
 }
 export class NumberOfLogic extends RuleLogicBase {
     tracked = 0;
     constructor(tracked) {
-        super(new.target.name);
+        super(new.target.name + tracked);
         this.tracked = tracked;
+    }
+    get trackedNumber() {
+        return this.tracked;
     }
     calculate(...values) {
         return values
@@ -159,63 +162,6 @@ export class BonusLogic extends RuleLogicBase {
         return values.reduce((acc, cur) => acc + cur, 0) >= this.target
             ? 25
             : 0;
-    }
-}
-//#endregion
-//#region ScoreCard
-export class ScoreCardLogic extends Freezable {
-    rules = [
-        new NumberOfLogic(1),
-        new NumberOfLogic(2),
-        new NumberOfLogic(3),
-        new NumberOfLogic(4),
-        new NumberOfLogic(5),
-        new NumberOfLogic(6),
-        new OfAKindLogic(3),
-        new OfAKindLogic(4),
-        new FullHouseLogic(),
-        new StraightLogic(4),
-        new StraightLogic(5),
-        new ChanceLogic(),
-        new YahtzeeLogic(),
-    ];
-    bonus = new BonusLogic(63);
-    checkBonus() {
-        if (!this.bonus.isFrozen) {
-            const numberOfRules = this.rules
-                .filter(rule => rule instanceof NumberOfLogic);
-            this.bonus.update(...numberOfRules.map(rule => rule.currentScore));
-        }
-        return this.bonus.currentScore > 0;
-    }
-    calculate(...dieValues) {
-        this.rules.forEach(rule => rule.update(...dieValues));
-        if (this.checkBonus()) {
-            this.bonus.freeze();
-            this.rules.splice(6, 0, this.bonus);
-        }
-        return this.rules.reduce((acc, cur) => acc + cur.currentScore, 0);
-    }
-}
-//#endregion
-//#region Player
-export class PlayerLogic {
-    name;
-    score = 0;
-    constructor(name) {
-        this.name = name;
-    }
-    get playerName() {
-        return this.name;
-    }
-    get currentScore() {
-        return this.score;
-    }
-    update(...scores) {
-        this.score = this.calculate(...scores);
-    }
-    calculate(...scores) {
-        return scores.reduce((acc, cur) => acc + cur, 0);
     }
 }
 //#endregion

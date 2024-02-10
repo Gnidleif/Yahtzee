@@ -66,7 +66,7 @@ export class DieLogic extends DieLogicBase {
 
 export abstract class RuleLogicBase extends Freezable {
     private name: string;
-    private score: number = 0;
+    private currentScore: number = 0;
 
     constructor(name: string) {
         super();
@@ -77,13 +77,13 @@ export abstract class RuleLogicBase extends Freezable {
         return this.name;
     }
 
-    get currentScore(): number {
-        return this.score;
+    get score(): number {
+        return this.currentScore;
     }
 
     update(...values: number[]): void {
         if (!this.isFrozen) {
-            this.score = this.calculate(...values);
+            this.currentScore = this.calculate(...values);
         }
     }
 }
@@ -92,8 +92,12 @@ export class NumberOfLogic extends RuleLogicBase {
     private tracked: number = 0;
 
     constructor(tracked: number) {
-        super(new.target.name);
+        super(new.target.name + tracked);
         this.tracked = tracked;
+    }
+
+    get trackedNumber(): number {
+        return this.tracked;
     }
 
     override calculate(...values: number[]): number {
@@ -213,76 +217,6 @@ export class BonusLogic extends RuleLogicBase {
         return values.reduce((acc, cur) => acc + cur, 0) >= this.target
             ? 25
             : 0;
-    }
-}
-
-//#endregion
-
-//#region ScoreCard
-
-export class ScoreCardLogic extends Freezable {
-    private rules: RuleLogicBase[] = [
-        new NumberOfLogic(1),
-        new NumberOfLogic(2),
-        new NumberOfLogic(3),
-        new NumberOfLogic(4),
-        new NumberOfLogic(5),
-        new NumberOfLogic(6),
-        new OfAKindLogic(3),
-        new OfAKindLogic(4),
-        new FullHouseLogic(),
-        new StraightLogic(4),
-        new StraightLogic(5),
-        new ChanceLogic(),
-        new YahtzeeLogic(),
-    ];
-    private bonus: BonusLogic = new BonusLogic(63);
-
-    checkBonus(): boolean {
-        if (!this.bonus.isFrozen) {
-            const numberOfRules: NumberOfLogic[] = this.rules
-                .filter(rule => rule instanceof NumberOfLogic) as NumberOfLogic[];
-            this.bonus.update(...numberOfRules.map(rule => rule.currentScore));
-        }
-        return this.bonus.currentScore > 0;
-    }
-
-    calculate(...dieValues: number[]): number {
-        this.rules.forEach(rule => rule.update(...dieValues));
-        if (this.checkBonus()) {
-            this.bonus.freeze();
-            this.rules.splice(6, 0, this.bonus);
-        }
-        return this.rules.reduce((acc, cur) => acc + cur.currentScore, 0);
-    }
-}
-
-//#endregion
-
-//#region Player
-
-export class PlayerLogic implements ILogic {
-    private name: string;
-    private score: number = 0;
-
-    constructor(name: string) {
-        this.name = name;
-    }
-
-    get playerName(): string {
-        return this.name;
-    }
-
-    get currentScore(): number {
-        return this.score;
-    }
-
-    update(...scores: number[]) {
-        this.score = this.calculate(...scores);
-    }
-
-    calculate(...scores: number[]): number {
-        return scores.reduce((acc, cur) => acc + cur, 0);
     }
 }
 
