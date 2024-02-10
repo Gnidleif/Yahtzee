@@ -1,4 +1,3 @@
-//#region Base
 export class Freezable {
     frozen = false;
     get isFrozen() {
@@ -14,8 +13,6 @@ export class Freezable {
         this.frozen = false;
     }
 }
-//#endregion
-//#region Die
 export class DieLogicBase extends Freezable {
     value = 0;
     sides;
@@ -40,8 +37,6 @@ export class DieLogic extends DieLogicBase {
         return Math.floor(Math.random() * this.sidesCount) + 1;
     }
 }
-//#endregion
-//#region Rule
 export class RuleLogicBase extends Freezable {
     name;
     currentScore = 0;
@@ -164,4 +159,3 @@ export class BonusLogic extends RuleLogicBase {
             : 0;
     }
 }
-//#endregion

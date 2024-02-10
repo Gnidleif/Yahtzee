@@ -1,4 +1,3 @@
-//#region Base
 export class Displayable {
     element;
     constructor(element) {
@@ -8,8 +7,6 @@ export class Displayable {
         return this.element;
     }
 }
-//#endregion
-//#region Die
 export class DieDisplay extends Displayable {
     dots = [];
     constructor() {
@@ -31,8 +28,6 @@ export class DieDisplay extends Displayable {
         this.element.replaceChildren(...this.dots);
     }
 }
-//#endregion
-//#region Rule
 export class RuleDisplay extends Displayable {
     scoreCell;
     constructor(id) {
@@ -51,4 +46,3 @@ export class RuleDisplay extends Displayable {
         this.scoreCell.textContent = score.toString();
     }
 }
-//#endregion

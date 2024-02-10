@@ -16,12 +16,4 @@ const gameState: HTMLElement = document.querySelector("#game-state")!;
 const endState: HTMLElement = document.querySelector("#end-state")!;
 
 const start = new Start(startState);
-start.show();
-
-const game = new Game(gameState, ["Player 1", "Player 2"]);
-game.update();
-game.display();
-game.show();
-
-const end = new End(endState);
-end.show();
+start.display();

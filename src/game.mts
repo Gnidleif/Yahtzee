@@ -1,4 +1,11 @@
 import {
+    hide,
+    show,
+    disable,
+    enable,
+    find,
+} from './utils.mjs';
+import {
     Die,
     Rule,
 }
@@ -20,19 +27,11 @@ abstract class GameObject {
 
     constructor(element: HTMLElement) {
         this.htmlElement = element;
-        this.hide();
+        hide(this.htmlElement);
     }
 
     find(selector: string): HTMLElement {
-        return this.htmlElement.querySelector(selector)!;
-    }
-
-    hide(): void {
-        this.htmlElement.style.display = "none";
-    }
-
-    show(displayType: string = "block"): void {
-        this.htmlElement.style.display = displayType;
+        return find(this.htmlElement, selector);
     }
 
     abstract update(): void;
@@ -55,7 +54,7 @@ class ScoreCard extends GameObject {
         new Rule(new ChanceLogic()),
         new Rule(new YahtzeeLogic()),
     ];
-    private bonusEarned: boolean = false;
+    private bonusAdded: boolean = false;
     private readonly bonus: Rule;
 
     constructor(element: HTMLElement) {
@@ -75,24 +74,28 @@ class ScoreCard extends GameObject {
             .filter(rule => rule.checkType(NumberOfLogic))
             .map(rule => rule.score);
 
+        if (numberOfScores.length === 0) {
+            return;
+        }
+
         this.bonus.update(...numberOfScores);
 
-        if (this.bonus.score > 0) {
+        if (this.bonus.score > 0 || numberOfScores.length === 6) {
             this.bonus.toggle();
             this.rules.splice(6, 0, this.bonus);
-            this.bonusEarned = true;
+            this.bonusAdded = true;
         }
     }
 
     override update(...diceValues: number[]): void {
         this.rules.forEach(rule => rule.update(...diceValues));
-        if (!this.bonusEarned){
+        if (!this.bonusAdded) {
             this.checkBonus();
         }
     }
 
     override display(): void {
-        this.show();
+        show(this.htmlElement);
         this.htmlElement.replaceChildren(...this.rules.map(rule => rule.display()));
     }
 }
@@ -115,7 +118,7 @@ class Dice extends GameObject {
     }
 
     override display(): void {
-        this.show("flex");
+        show(this.htmlElement, "flex");
         this.htmlElement.replaceChildren(...this.dice.map(die => die.display()));
     }
 }
@@ -143,17 +146,54 @@ class Player extends GameObject {
     override display(): void {
         this.find("#player-name").textContent = this.name;
         this.find("#player-score").textContent = `Score: ${this.score}`;
-        this.scoreCard.show();
         this.scoreCard.display();
     }
 }
 
-export class Start extends GameObject {
-    override update(): void {
-        throw new Error('Method not implemented.');
+export class Start {
+    private readonly htmlElement: HTMLElement;
+    private readonly addForm: HTMLElement;
+    private readonly addButton: HTMLButtonElement;
+    private readonly startButton: HTMLButtonElement;
+    private readonly playerList: HTMLOListElement;
+    private readonly playerNames: string[] = [];
+
+    constructor(element: HTMLElement) {
+        this.htmlElement = element;
+        this.addForm = find(this.htmlElement, "#add-player");
+        this.addButton = find(this.htmlElement, "#add-button") as HTMLButtonElement;
+        this.startButton = find(this.htmlElement, "#start-game") as HTMLButtonElement;
+        this.playerList = find(this.htmlElement, "#player-list") as HTMLOListElement;
+
+        this.addForm.querySelector("#player-name")!.addEventListener("input", (evt: Event) => {
+            const target = evt.target! as HTMLInputElement;
+            if (target.value.length >= 3) {
+                enable(this.addButton);
+            }
+        });
+
+        this.addButton.addEventListener("click", () => {
+            const input = this.addForm.querySelector("#player-name") as HTMLInputElement;
+            const name = input.value;
+            input.value = "";
+            this.playerNames.push(name);
+            if (this.playerNames.length >= 2) {
+                enable(this.startButton);
+            }
+            this.display();
+        });
+
+        disable(this.addButton);
+        disable(this.startButton);
     }
-    override display(): void {
-        this.show();
+
+    display(): void {
+        show(this.htmlElement);
+        this.playerList.replaceChildren(...this.playerNames.map(name => {
+            const li = document.createElement("li");
+            li.textContent = name;
+            return li;
+        }));
     }
 }
 

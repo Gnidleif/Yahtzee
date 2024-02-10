@@ -2,8 +2,6 @@ import * as l from "./logic.mjs";
 import * as d from "./display.mjs";
 import * as c from "./composite.mjs";
 
-//#region Test framework
-
 class Test {
     private readonly name: string;
     private readonly args: any[];
@@ -94,10 +92,6 @@ export function RunTests(testHandler: TestHandler, verbose: boolean): void {
     console.info(`${testName} ran ${testHandler.testCount} tests in ${time}ms`);
 }
 
-//#endregion
-
-//#region Die tests
-
 export const dieTests = new class DieTests extends TestHandler {};
 
 // Logic tests
@@ -157,10 +151,6 @@ dieTests.add(new Test("Die unfreeze",
     (x: c.Die) => { x.display().click(); x.display().click(); return x.display().classList.contains("frozen"); },
     (x: boolean) => TestHandler.assertFalse(x),
     new c.Die()));
-
-//#endregion
-
-//#region Rule tests
 
 export const ruleTests = new class RuleTests extends TestHandler {};
 
@@ -340,7 +330,5 @@ ruleTests.add(new Test("Rule freeze",
     new c.Rule(new l.NumberOfLogic(6))));
 ruleTests.add(new Test("Rule unfreeze",
     (r: c.Rule) => { r.display().click(); r.display().click(); return r.isFrozen; },
-    (x: boolean) => TestHandler.assertTrue(x),
+    (x: boolean) => TestHandler.assertFalse(x),
     new c.Rule(new l.NumberOfLogic(6))));
-
-//#endregion

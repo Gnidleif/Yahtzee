@@ -1,5 +1,3 @@
-//#region Base
-
 export abstract class Displayable {
     protected readonly element: HTMLElement;
 
@@ -11,10 +9,6 @@ export abstract class Displayable {
         return this.element;
     }
 }
-
-//#endregion
-
-//#region Die
 
 export class DieDisplay extends Displayable {
     private dots: HTMLDivElement[] = [];
@@ -42,10 +36,6 @@ export class DieDisplay extends Displayable {
     }
 }
 
-//#endregion
-
-//#region Rule
-
 export class RuleDisplay extends Displayable {
     private readonly scoreCell: HTMLTableCellElement;
 
@@ -68,5 +58,3 @@ export class RuleDisplay extends Displayable {
         this.scoreCell.textContent = score.toString();
     }
 }
-
-//#endregion

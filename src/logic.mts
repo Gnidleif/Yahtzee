@@ -1,5 +1,3 @@
-//#region Base
-
 export interface ILogic {
     calculate(...values : number[]): number;
 }
@@ -25,10 +23,6 @@ export abstract class Freezable implements ILogic {
         this.frozen = false;
     }
 }
-
-//#endregion
-
-//#region Die
 
 export abstract class DieLogicBase extends Freezable {
     private value: number = 0;
@@ -59,10 +53,6 @@ export class DieLogic extends DieLogicBase {
         return Math.floor(Math.random() * this.sidesCount) + 1;
     }
 }
-
-//#endregion
-
-//#region Rule
 
 export abstract class RuleLogicBase extends Freezable {
     private readonly name: string;
@@ -219,5 +209,3 @@ export class BonusLogic extends RuleLogicBase {
             : 0;
     }
 }
-
-//#endregion

@@ -1,7 +1,6 @@
 import * as l from "./logic.mjs";
 import * as d from "./display.mjs";
 import * as c from "./composite.mjs";
-//#region Test framework
 class Test {
     name;
     args;
@@ -78,8 +77,6 @@ export function RunTests(testHandler, verbose) {
     const time = (after - start).toFixed(2);
     console.info(`${testName} ran ${testHandler.testCount} tests in ${time}ms`);
 }
-//#endregion
-//#region Die tests
 export const dieTests = new class DieTests extends TestHandler {
 };
 // Logic tests
@@ -99,8 +96,6 @@ dieTests.add(new Test("Die constructor", () => new c.Die(), (x) => TestHandler.a
 dieTests.add(new Test("Die roll", (x) => { x.roll(); return x; }, (x) => TestHandler.assertTrue(x.display().querySelectorAll(".dot").length > 0), new c.Die()));
 dieTests.add(new Test("Die freeze", (x) => { x.display().click(); return x.display().classList.contains("frozen"); }, (x) => TestHandler.assertTrue(x), new c.Die()));
 dieTests.add(new Test("Die unfreeze", (x) => { x.display().click(); x.display().click(); return x.display().classList.contains("frozen"); }, (x) => TestHandler.assertFalse(x), new c.Die()));
-//#endregion
-//#region Rule tests
 export const ruleTests = new class RuleTests extends TestHandler {
 };
 // Logic tests
@@ -151,5 +146,4 @@ ruleTests.add(new Test("RuleDisplay out of range", (r) => r.update(-1), (x) => T
 ruleTests.add(new Test("Rule constructor", () => new c.Rule(new l.NumberOfLogic(6)), (x) => TestHandler.assertType(c.Rule, x)));
 ruleTests.add(new Test("Rule check", (r) => { r.update(1, 2, 3, 4, 5, 6); return r.display(); }, (e) => TestHandler.assertTrue(e.children[1].textContent === "6"), new c.Rule(new l.NumberOfLogic(6))));
 ruleTests.add(new Test("Rule freeze", (r) => { r.display().click(); return r.isFrozen; }, (x) => TestHandler.assertTrue(x), new c.Rule(new l.NumberOfLogic(6))));
-ruleTests.add(new Test("Rule unfreeze", (r) => { r.display().click(); r.display().click(); return r.isFrozen; }, (x) => TestHandler.assertTrue(x), new c.Rule(new l.NumberOfLogic(6))));
-//#endregion
+ruleTests.add(new Test("Rule unfreeze", (r) => { r.display().click(); r.display().click(); return r.isFrozen; }, (x) => TestHandler.assertFalse(x), new c.Rule(new l.NumberOfLogic(6))));

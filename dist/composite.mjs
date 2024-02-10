@@ -1,7 +1,3 @@
-/**
- * composite.mts
- * Composites are object made up of two parts: a displayable and a logic component.
- */
 import { DieDisplay, RuleDisplay, } from "./display.mjs";
 import { DieLogic, } from "./logic.mjs";
 class Composite {
@@ -19,6 +15,9 @@ class FreezableComposite extends Composite {
     constructor(display, logic) {
         super(display, logic);
         this.displayComponent.htmlElement.classList.add("freezable");
+        this.displayComponent.htmlElement.addEventListener("click", () => {
+            this.toggle();
+        });
     }
     get isFrozen() {
         return this.logicComponent.isFrozen;
@@ -31,9 +30,6 @@ class FreezableComposite extends Composite {
 export class Die extends FreezableComposite {
     constructor(logicObject = new DieLogic(6)) {
         super(new DieDisplay(), logicObject);
-        this.displayComponent.htmlElement.addEventListener("click", () => {
-            this.toggle();
-        });
     }
     get currentValue() {
         return this.logicComponent.currentValue;
@@ -46,11 +42,6 @@ export class Die extends FreezableComposite {
 export class Rule extends FreezableComposite {
     constructor(logicObject) {
         super(new RuleDisplay(logicObject.ruleName), logicObject);
-        this.displayComponent.htmlElement.addEventListener("click", () => {
-            if (!this.isFrozen) {
-                this.toggle();
-            }
-        });
     }
     get score() {
         return this.logicComponent.score;

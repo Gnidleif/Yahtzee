@@ -1,19 +1,14 @@
+import { hide, show, disable, enable, find, } from './utils.mjs';
 import { Die, Rule, } from './composite.mjs';
 import { DieLogic, NumberOfLogic, OfAKindLogic, StraightLogic, FullHouseLogic, ChanceLogic, YahtzeeLogic, BonusLogic, } from './logic.mjs';
 class GameObject {
     htmlElement;
     constructor(element) {
         this.htmlElement = element;
-        this.hide();
+        hide(this.htmlElement);
     }
     find(selector) {
-        return this.htmlElement.querySelector(selector);
-    }
-    hide() {
-        this.htmlElement.style.display = "none";
-    }
-    show(displayType = "block") {
-        this.htmlElement.style.display = displayType;
+        return find(this.htmlElement, selector);
     }
 }
 class ScoreCard extends GameObject {
@@ -32,7 +27,7 @@ class ScoreCard extends GameObject {
         new Rule(new ChanceLogic()),
         new Rule(new YahtzeeLogic()),
     ];
-    bonusEarned = false;
+    bonusAdded = false;
     bonus;
     constructor(element) {
         super(element);
@@ -48,21 +43,24 @@ class ScoreCard extends GameObject {
             .filter(rule => rule.isFrozen)
             .filter(rule => rule.checkType(NumberOfLogic))
             .map(rule => rule.score);
+        if (numberOfScores.length === 0) {
+            return;
+        }
         this.bonus.update(...numberOfScores);
-        if (this.bonus.score > 0) {
+        if (this.bonus.score > 0 || numberOfScores.length === 6) {
             this.bonus.toggle();
             this.rules.splice(6, 0, this.bonus);
-            this.bonusEarned = true;
+            this.bonusAdded = true;
         }
     }
     update(...diceValues) {
         this.rules.forEach(rule => rule.update(...diceValues));
-        if (!this.bonusEarned) {
+        if (!this.bonusAdded) {
             this.checkBonus();
         }
     }
     display() {
-        this.show();
+        show(this.htmlElement);
         this.htmlElement.replaceChildren(...this.rules.map(rule => rule.display()));
     }
 }
@@ -79,7 +77,7 @@ class Dice extends GameObject {
         this.dice.forEach(die => die.roll());
     }
     display() {
-        this.show("flex");
+        show(this.htmlElement, "flex");
         this.htmlElement.replaceChildren(...this.dice.map(die => die.display()));
     }
 }
@@ -102,16 +100,48 @@ class Player extends GameObject {
     display() {
         this.find("#player-name").textContent = this.name;
         this.find("#player-score").textContent = `Score: ${this.score}`;
-        this.scoreCard.show();
         this.scoreCard.display();
     }
 }
-export class Start extends GameObject {
-    update() {
-        throw new Error('Method not implemented.');
+export class Start {
+    htmlElement;
+    addForm;
+    addButton;
+    startButton;
+    playerList;
+    playerNames = [];
+    constructor(element) {
+        this.htmlElement = element;
+        this.addForm = find(this.htmlElement, "#add-player");
+        this.addButton = find(this.htmlElement, "#add-button");
+        this.startButton = find(this.htmlElement, "#start-game");
+        this.playerList = find(this.htmlElement, "#player-list");
+        this.addForm.querySelector("#player-name").addEventListener("input", (evt) => {
+            const target = evt.target;
+            if (target.value.length >= 3) {
+                enable(this.addButton);
+            }
+        });
+        this.addButton.addEventListener("click", () => {
+            const input = this.addForm.querySelector("#player-name");
+            const name = input.value;
+            input.value = "";
+            this.playerNames.push(name);
+            if (this.playerNames.length >= 2) {
+                enable(this.startButton);
+            }
+            this.display();
+        });
+        disable(this.addButton);
+        disable(this.startButton);
     }
     display() {
-        this.show();
+        show(this.htmlElement);
+        this.playerList.replaceChildren(...this.playerNames.map(name => {
+            const li = document.createElement("li");
+            li.textContent = name;
+            return li;
+        }));
     }
 }
 export class Game extends GameObject {
