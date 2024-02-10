@@ -23,6 +23,10 @@ abstract class GameObject {
         this.hide();
     }
 
+    find(selector: string): HTMLElement {
+        return this.htmlElement.querySelector(selector)!;
+    }
+
     hide(): void {
         this.htmlElement.style.display = "none";
     }
@@ -36,7 +40,7 @@ abstract class GameObject {
 }
 
 class ScoreCard extends GameObject {
-    private rules: Rule[] = [
+    private readonly rules: Rule[] = [
         new Rule(new NumberOfLogic(1)),
         new Rule(new NumberOfLogic(2)),
         new Rule(new NumberOfLogic(3)),
@@ -51,22 +55,12 @@ class ScoreCard extends GameObject {
         new Rule(new ChanceLogic()),
         new Rule(new YahtzeeLogic()),
     ];
+    private bonusEarned: boolean = false;
+    private bonus: Rule;
 
     constructor(element: HTMLElement) {
-        const table: HTMLTableElement = document.createElement("table");
-        element.appendChild(table);
-        super(table);
-        
-        const header: HTMLTableRowElement = document.createElement("tr");
-        const nameCell: HTMLTableCellElement = document.createElement("td");
-        nameCell.textContent = "Name";
-        header.appendChild(nameCell);
-
-        const scoreCell: HTMLTableCellElement = document.createElement("td");
-        scoreCell.textContent = "Score";
-        header.appendChild(scoreCell);
-
-        this.htmlElement.appendChild(header);
+        super(element);
+        this.bonus = new Rule(new BonusLogic(63));
     }
 
     get score(): number {
@@ -75,19 +69,36 @@ class ScoreCard extends GameObject {
             .reduce((acc, cur) => acc + cur.score, 0);
     }
 
+    checkBonus(): void {
+        const numberOfScores: number[] = this.rules
+            .filter(rule => rule.isFrozen)
+            .filter(rule => rule.checkType(NumberOfLogic))
+            .map(rule => rule.score);
+
+        this.bonus.update(...numberOfScores);
+
+        if (this.bonus.score > 0) {
+            this.bonus.toggle();
+            this.rules.splice(6, 0, this.bonus);
+            this.bonusEarned = true;
+        }
+    }
+
     override update(...diceValues: number[]): void {
         this.rules.forEach(rule => rule.update(...diceValues));
+        if (!this.bonusEarned){
+            this.checkBonus();
+        }
     }
 
     override display(): void {
         this.show();
-        this.htmlElement.querySelectorAll(".rule").forEach(rule => rule.remove());
-        this.htmlElement.append(...this.rules.map(rule => rule.display()));
+        this.htmlElement.replaceChildren(...this.rules.map(rule => rule.display()));
     }
 }
 
 class Dice extends GameObject {
-    private dice: Die[];
+    private readonly dice: Die[];
 
     constructor(element: HTMLElement, dieCount: number = 5, sides: number = 6) {
         super(element);
@@ -110,14 +121,18 @@ class Dice extends GameObject {
 }
 
 class Player extends GameObject {
-    private name: string;
+    private readonly name: string;
     private score: number = 0;
-    private scoreCard: ScoreCard;
+    private readonly scoreCard: ScoreCard;
 
     constructor(element: HTMLElement, name: string) {
         super(element);
         this.name = name;
-        this.scoreCard = new ScoreCard(element.querySelector("#score-card")!);
+        this.scoreCard = new ScoreCard(this.find("#score-card"));
+    }
+
+    get playerName(): string {
+        return this.name;
     }
 
     override update(...diceValues: number[]): void {
@@ -126,10 +141,8 @@ class Player extends GameObject {
     }
 
     override display(): void {
-        this.htmlElement.querySelector("#player-name")!
-            .textContent = this.name;
-        this.htmlElement.querySelector("#player-score")!
-            .textContent = `Score: ${this.score}`;
+        this.find("#player-name").textContent = this.name;
+        this.find("#player-score").textContent = `Score: ${this.score}`;
         this.scoreCard.show();
         this.scoreCard.display();
     }
@@ -145,19 +158,47 @@ export class Start extends GameObject {
 }
 
 export class Game extends GameObject {
-    private players: Player[];
-    private dice: Dice;
+    private readonly players: Player[];
     private currentIndex: number = 0;
+
+    private readonly dice: Dice;
+    private readonly maxRolls: number = 3;
+    private rolls: number = 3;
+
+    private readonly rollButton: HTMLButtonElement;
+    private readonly nextButton: HTMLButtonElement;
 
     constructor(element: HTMLElement, playerNames: string[]) {
         super(element);
         this.players = playerNames
             .map(name => new Player(element, name));
         this.dice = new Dice(element.querySelector(".dice")!);
-    }
 
+        this.rollButton = this.htmlElement.querySelector("#roll")!;
+        this.rollButton.addEventListener("click", () => {
+            if (this.rolls > 0) {
+                this.rolls--;
+                this.update();
+                this.display();
+            }
+        });
+
+        this.nextButton = this.htmlElement.querySelector("#next")!;
+
+        this.nextButton.addEventListener("click", () => {
+            this.currentIndex = this.nextIndex;
+            this.rolls = this.maxRolls;
+            this.update();
+            this.display();
+        });
+    }
+    
     get currentPlayer(): Player {
         return this.players[this.currentIndex];
+    }
+
+    get nextIndex(): number {
+        return (this.currentIndex + 1) % this.players.length;
     }
 
     override update(): void {
@@ -166,6 +207,8 @@ export class Game extends GameObject {
     }
 
     override display(): void {
+        this.rollButton.textContent = `Roll: ${this.rolls}`;
+        this.nextButton.textContent = `Next: ${this.players[this.nextIndex].playerName}`;
         this.dice.display();
         this.currentPlayer.display();
     }

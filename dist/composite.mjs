@@ -55,6 +55,9 @@ export class Rule extends FreezableComposite {
     get score() {
         return this.logicComponent.score;
     }
+    checkType(type) {
+        return this.logicComponent instanceof type;
+    }
     update(...values) {
         this.logicComponent.update(...values);
         this.displayComponent.update(this.score);

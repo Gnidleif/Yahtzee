@@ -1,10 +1,13 @@
 import { Die, Rule, } from './composite.mjs';
-import { DieLogic, NumberOfLogic, OfAKindLogic, StraightLogic, FullHouseLogic, ChanceLogic, YahtzeeLogic, } from './logic.mjs';
+import { DieLogic, NumberOfLogic, OfAKindLogic, StraightLogic, FullHouseLogic, ChanceLogic, YahtzeeLogic, BonusLogic, } from './logic.mjs';
 class GameObject {
     htmlElement;
     constructor(element) {
         this.htmlElement = element;
         this.hide();
+    }
+    find(selector) {
+        return this.htmlElement.querySelector(selector);
     }
     hide() {
         this.htmlElement.style.display = "none";
@@ -29,31 +32,38 @@ class ScoreCard extends GameObject {
         new Rule(new ChanceLogic()),
         new Rule(new YahtzeeLogic()),
     ];
+    bonusEarned = false;
+    bonus;
     constructor(element) {
-        const table = document.createElement("table");
-        element.appendChild(table);
-        super(table);
-        const header = document.createElement("tr");
-        const nameCell = document.createElement("td");
-        nameCell.textContent = "Name";
-        header.appendChild(nameCell);
-        const scoreCell = document.createElement("td");
-        scoreCell.textContent = "Score";
-        header.appendChild(scoreCell);
-        this.htmlElement.appendChild(header);
+        super(element);
+        this.bonus = new Rule(new BonusLogic(63));
     }
     get score() {
         return this.rules
             .filter(rule => rule.isFrozen)
             .reduce((acc, cur) => acc + cur.score, 0);
     }
+    checkBonus() {
+        const numberOfScores = this.rules
+            .filter(rule => rule.isFrozen)
+            .filter(rule => rule.checkType(NumberOfLogic))
+            .map(rule => rule.score);
+        this.bonus.update(...numberOfScores);
+        if (this.bonus.score > 0) {
+            this.bonus.toggle();
+            this.rules.splice(6, 0, this.bonus);
+            this.bonusEarned = true;
+        }
+    }
     update(...diceValues) {
         this.rules.forEach(rule => rule.update(...diceValues));
+        if (!this.bonusEarned) {
+            this.checkBonus();
+        }
     }
     display() {
         this.show();
-        this.htmlElement.querySelectorAll(".rule").forEach(rule => rule.remove());
-        this.htmlElement.append(...this.rules.map(rule => rule.display()));
+        this.htmlElement.replaceChildren(...this.rules.map(rule => rule.display()));
     }
 }
 class Dice extends GameObject {
@@ -80,17 +90,18 @@ class Player extends GameObject {
     constructor(element, name) {
         super(element);
         this.name = name;
-        this.scoreCard = new ScoreCard(element.querySelector("#score-card"));
+        this.scoreCard = new ScoreCard(this.find("#score-card"));
+    }
+    get playerName() {
+        return this.name;
     }
     update(...diceValues) {
         this.scoreCard.update(...diceValues);
         this.score = this.scoreCard.score;
     }
     display() {
-        this.htmlElement.querySelector("#player-name")
-            .textContent = this.name;
-        this.htmlElement.querySelector("#player-score")
-            .textContent = `Score: ${this.score}`;
+        this.find("#player-name").textContent = this.name;
+        this.find("#player-score").textContent = `Score: ${this.score}`;
         this.scoreCard.show();
         this.scoreCard.display();
     }
@@ -105,22 +116,46 @@ export class Start extends GameObject {
 }
 export class Game extends GameObject {
     players;
-    dice;
     currentIndex = 0;
+    dice;
+    maxRolls = 3;
+    rolls = 3;
+    rollButton;
+    nextButton;
     constructor(element, playerNames) {
         super(element);
         this.players = playerNames
             .map(name => new Player(element, name));
         this.dice = new Dice(element.querySelector(".dice"));
+        this.rollButton = this.htmlElement.querySelector("#roll");
+        this.rollButton.addEventListener("click", () => {
+            if (this.rolls > 0) {
+                this.rolls--;
+                this.update();
+                this.display();
+            }
+        });
+        this.nextButton = this.htmlElement.querySelector("#next");
+        this.nextButton.addEventListener("click", () => {
+            this.currentIndex = this.nextIndex;
+            this.rolls = this.maxRolls;
+            this.update();
+            this.display();
+        });
     }
     get currentPlayer() {
         return this.players[this.currentIndex];
+    }
+    get nextIndex() {
+        return (this.currentIndex + 1) % this.players.length;
     }
     update() {
         this.dice.update();
         this.currentPlayer.update(...this.dice.values);
     }
     display() {
+        this.rollButton.textContent = `Roll: ${this.rolls}`;
+        this.nextButton.textContent = `Next: ${this.players[this.nextIndex].playerName}`;
         this.dice.display();
         this.currentPlayer.display();
     }
