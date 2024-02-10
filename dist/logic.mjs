@@ -18,7 +18,7 @@ export class Freezable {
 //#region Die
 export class DieLogicBase extends Freezable {
     value = 0;
-    sides = 0;
+    sides;
     constructor(sides) {
         super();
         this.sides = sides;
@@ -62,7 +62,7 @@ export class RuleLogicBase extends Freezable {
     }
 }
 export class NumberOfLogic extends RuleLogicBase {
-    tracked = 0;
+    tracked;
     constructor(tracked) {
         super(new.target.name + tracked);
         this.tracked = tracked;
@@ -77,7 +77,7 @@ export class NumberOfLogic extends RuleLogicBase {
     }
 }
 export class OfAKindLogic extends RuleLogicBase {
-    tracked = 0;
+    tracked;
     constructor(tracked) {
         super(new.target.name + tracked);
         this.tracked = tracked;
@@ -93,7 +93,7 @@ export class OfAKindLogic extends RuleLogicBase {
     }
 }
 export class StraightLogic extends RuleLogicBase {
-    length = 0;
+    length;
     constructor(length) {
         super(new.target.name + length);
         this.length = length;
@@ -153,7 +153,7 @@ export class YahtzeeLogic extends RuleLogicBase {
     }
 }
 export class BonusLogic extends RuleLogicBase {
-    target = 0;
+    target;
     constructor(target) {
         super(new.target.name + target);
         this.target = target;

@@ -16,8 +16,8 @@ import {
 } from "./logic.mjs";
 
 abstract class Composite {
-    protected displayComponent: Displayable;
-    protected logicComponent: ILogic;
+    protected readonly displayComponent: Displayable;
+    protected readonly logicComponent: ILogic;
 
     constructor(display: Displayable, logic: ILogic) {
         this.displayComponent = display;
@@ -30,7 +30,7 @@ abstract class Composite {
 }
 
 class FreezableComposite extends Composite {
-    declare protected logicComponent: Freezable;
+    declare protected readonly logicComponent: Freezable;
 
     constructor(display: Displayable, logic: Freezable) {
         super(display, logic);
@@ -48,8 +48,8 @@ class FreezableComposite extends Composite {
 }
 
 export class Die extends FreezableComposite {
-    declare protected logicComponent: DieLogic;
-    declare protected displayComponent: DieDisplay;
+    declare protected readonly logicComponent: DieLogic;
+    declare protected readonly displayComponent: DieDisplay;
 
     constructor(logicObject: Freezable = new DieLogic(6)) {
         super(new DieDisplay(), logicObject);
@@ -70,8 +70,8 @@ export class Die extends FreezableComposite {
 }
 
 export class Rule extends FreezableComposite {
-    declare protected logicComponent: RuleLogicBase;
-    declare protected displayComponent: RuleDisplay;
+    declare protected readonly logicComponent: RuleLogicBase;
+    declare protected readonly displayComponent: RuleDisplay;
 
     constructor(logicObject: RuleLogicBase) {
         super(new RuleDisplay(logicObject.ruleName), logicObject);

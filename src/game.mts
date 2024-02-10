@@ -16,7 +16,7 @@ import {
 from './logic.mjs';
 
 abstract class GameObject {
-    protected htmlElement: HTMLElement;
+    protected readonly htmlElement: HTMLElement;
 
     constructor(element: HTMLElement) {
         this.htmlElement = element;
@@ -56,7 +56,7 @@ class ScoreCard extends GameObject {
         new Rule(new YahtzeeLogic()),
     ];
     private bonusEarned: boolean = false;
-    private bonus: Rule;
+    private readonly bonus: Rule;
 
     constructor(element: HTMLElement) {
         super(element);

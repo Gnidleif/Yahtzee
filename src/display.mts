@@ -1,7 +1,7 @@
 //#region Base
 
 export abstract class Displayable {
-    protected element: HTMLElement;
+    protected readonly element: HTMLElement;
 
     constructor(element: HTMLElement) {
         this.element = element;
@@ -47,7 +47,7 @@ export class DieDisplay extends Displayable {
 //#region Rule
 
 export class RuleDisplay extends Displayable {
-    private scoreCell: HTMLTableCellElement;
+    private readonly scoreCell: HTMLTableCellElement;
 
     constructor(id: string) {
         super(document.createElement("tr"));

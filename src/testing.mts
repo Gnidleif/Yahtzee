@@ -5,10 +5,10 @@ import * as c from "./composite.mjs";
 //#region Test framework
 
 class Test {
-    private name: string;
-    private args: any[];
-    private testFunc: Function;
-    private assertFunc: Function;
+    private readonly name: string;
+    private readonly args: any[];
+    private readonly testFunc: Function;
+    private readonly assertFunc: Function;
 
     constructor(name: string, testFunc: Function, assertFunc: Function, ...args: any[]) {
         this.name = name;
@@ -36,7 +36,7 @@ class Test {
 }
 
 export class TestHandler {
-    private tests: Test[] = [];
+    private readonly tests: Test[] = [];
 
     get testCount(): number {
         return this.tests.length;

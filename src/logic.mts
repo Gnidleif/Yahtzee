@@ -32,7 +32,7 @@ export abstract class Freezable implements ILogic {
 
 export abstract class DieLogicBase extends Freezable {
     private value: number = 0;
-    private sides: number = 0;
+    private readonly sides: number;
 
     constructor(sides: number) {
         super();
@@ -65,7 +65,7 @@ export class DieLogic extends DieLogicBase {
 //#region Rule
 
 export abstract class RuleLogicBase extends Freezable {
-    private name: string;
+    private readonly name: string;
     private currentScore: number = 0;
 
     constructor(name: string) {
@@ -89,7 +89,7 @@ export abstract class RuleLogicBase extends Freezable {
 }
 
 export class NumberOfLogic extends RuleLogicBase {
-    private tracked: number = 0;
+    private readonly tracked: number;
 
     constructor(tracked: number) {
         super(new.target.name + tracked);
@@ -108,7 +108,7 @@ export class NumberOfLogic extends RuleLogicBase {
 }
 
 export class OfAKindLogic extends RuleLogicBase {
-    private tracked: number = 0;
+    private readonly tracked: number;
 
     constructor(tracked: number) {
         super(new.target.name + tracked);
@@ -131,7 +131,7 @@ export class OfAKindLogic extends RuleLogicBase {
 }
 
 export class StraightLogic extends RuleLogicBase {
-    private length: number = 0;
+    private readonly length: number;
 
     constructor(length: number) {
         super(new.target.name + length);
@@ -206,7 +206,7 @@ export class YahtzeeLogic extends RuleLogicBase {
 }
 
 export class BonusLogic extends RuleLogicBase {
-    private target: number = 0;
+    private readonly target: number;
 
     constructor(target: number) {
         super(new.target.name + target);
