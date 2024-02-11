@@ -154,6 +154,9 @@ export class Game extends GameState {
     }
 
     override initialize(...playerNames: string[]): void {
+        this.clickedRule = null;
+        this.currentIndex = 0;
+        this.rolls = 3;
         this.players = playerNames.map(name => new Player(this.htmlElement, this.scoreCardTable, name));
         disable(this.nextButton);
     }
