@@ -41,23 +41,23 @@ abstract class GameObject {
 class ScoreCard extends GameObject {
     private readonly rules: Rule[] = [
         new Rule(new NumberOfLogic(1)),
-        new Rule(new NumberOfLogic(2)),
-        new Rule(new NumberOfLogic(3)),
-        new Rule(new NumberOfLogic(4)),
-        new Rule(new NumberOfLogic(5)),
-        new Rule(new NumberOfLogic(6)),
-        new Rule(new OfAKindLogic(3)),
-        new Rule(new OfAKindLogic(4)),
-        new Rule(new StraightLogic(4)),
-        new Rule(new StraightLogic(5)),
-        new Rule(new FullHouseLogic()),
-        new Rule(new ChanceLogic()),
-        new Rule(new YahtzeeLogic()),
+        // new Rule(new NumberOfLogic(2)),
+        // new Rule(new NumberOfLogic(3)),
+        // new Rule(new NumberOfLogic(4)),
+        // new Rule(new NumberOfLogic(5)),
+        // new Rule(new NumberOfLogic(6)),
+        // new Rule(new OfAKindLogic(3)),
+        // new Rule(new OfAKindLogic(4)),
+        // new Rule(new StraightLogic(4)),
+        // new Rule(new StraightLogic(5)),
+        // new Rule(new FullHouseLogic()),
+        // new Rule(new ChanceLogic()),
+        // new Rule(new YahtzeeLogic()),
     ];
     private bonusAdded: boolean = false;
     private readonly bonus: Rule;
 
-    constructor(element: HTMLElement) {
+    constructor(element: HTMLTableElement) {
         super(element);
         this.bonus = new Rule(new BonusLogic(63));
     }
@@ -68,8 +68,24 @@ class ScoreCard extends GameObject {
             .reduce((acc, cur) => acc + cur.score, 0);
     }
 
-    toggle(id: string): void {
-        this.rules.find(rule => rule.ruleName === id)!.toggle();
+    get isDone(): boolean {
+        return this.rules.every(rule => rule.isFrozen);
+    }
+
+    isFrozen(ruleName: string): boolean {
+        return this.rules.find(rule => rule.ruleName === ruleName)!.isFrozen;
+    }
+
+    toggle(ruleName: string): void {
+        this.rules.find(rule => rule.ruleName === ruleName)!.toggle();
+    }
+
+    freeze(ruleName: string): void {
+        this.rules.find(rule => rule.ruleName === ruleName)!.freeze();
+    }
+
+    unfreeze(): void {
+        this.rules.forEach(rule => rule.unfreeze());
     }
 
     checkBonus(): void {
@@ -133,24 +149,30 @@ class Dice extends GameObject {
 
 class Player extends GameObject {
     private readonly name: string;
-    private score: number = 0;
+    private readonly scoreCard: ScoreCard;
 
-    constructor(element: HTMLElement, name: string) {
+    constructor(element: HTMLElement, scoreCardTable: HTMLTableElement, name: string) {
         super(element);
         this.name = name;
+        this.scoreCard = new ScoreCard(scoreCardTable);
     }
 
     get playerName(): string {
         return this.name;
     }
 
-    override update(ruleScore: number = 0): void {
-        this.score = ruleScore;
+    get scoreState(): ScoreCard {
+        return this.scoreCard;
+    }
+
+    override update(...diceValues: number[]): void {
+        this.scoreCard.update(...diceValues);
     }
 
     override display(): void {
         this.find("#player-name").textContent = this.name;
-        this.find("#player-score").textContent = `Score: ${this.score}`;
+        this.find("#player-score").textContent = `Score: ${this.scoreCard.score}`;
+        this.scoreCard.display();
     }
 }
 
@@ -205,16 +227,16 @@ export class Start extends GameObject {
 
     display(): void {
         show(this.htmlElement);
-        this.playerList.replaceChildren(...this.playerNames.map(name => {
+        const listItems: HTMLLIElement[] = this.playerNames.map(name => {
             const li = document.createElement("li");
             li.textContent = name;
             return li;
-        }));
+        });
+        this.playerList.replaceChildren(...listItems);
     }
 }
 
-export class Game extends GameObject {
-    private readonly scoreCard: ScoreCard;
+class Game extends GameObject {
     private clickedRule: string | null = "";
 
     private readonly dice: Dice;
@@ -226,13 +248,13 @@ export class Game extends GameObject {
 
     private readonly rollButton: HTMLButtonElement;
     private readonly nextButton: HTMLButtonElement;
+    private readonly scoreCardTable: HTMLTableElement;
 
     constructor(element: HTMLElement, playerNames: string[]) {
         super(element);
-        this.players = playerNames.map(name => new Player(element, name));
+        this.scoreCardTable = this.find("#score-card") as HTMLTableElement;
+        this.players = playerNames.map(name => new Player(element, this.scoreCardTable, name));
         this.dice = new Dice(this.find(".dice"));
-        const scoreCardElement = this.find("#score-card");
-        this.scoreCard = new ScoreCard(scoreCardElement);
 
         this.rollButton = this.find("#roll") as HTMLButtonElement;
         this.nextButton = this.find("#next") as HTMLButtonElement;
@@ -247,27 +269,19 @@ export class Game extends GameObject {
         });
 
         this.nextButton.addEventListener("click", () => {
-            this.currentIndex = this.nextIndex;
-            this.rolls = this.maxRolls;
-            this.clickedRule = null;
-            this.dice.unfreeze();
-            this.update();
-            this.display();
+            this.nextClicked();
         });
 
-        scoreCardElement.addEventListener("click", (evt: MouseEvent) => {
-            const target = (evt.target as HTMLElement)!.parentNode! as HTMLElement;
-            if (!target.classList.contains("rule")) {
-                return;
+        this.scoreCardTable.addEventListener("click", (evt: Event) => {
+            const target = (evt.target! as HTMLElement).parentNode as HTMLElement;
+            if (target.classList.contains("rule")) {
+                this.ruleClicked(target.id);
             }
-            if (!this.clickedRule || this.clickedRule === target.id) {
-                this.clickedRule = !this.clickedRule
-                    ? target.id
-                    : null;
-                this.scoreCard.toggle(target.id);
-            }
-            this.clickedRule ? enable(this.nextButton) : disable(this.nextButton);
         });
+    }
+
+    get isDone(): boolean {
+        return this.players.every(player => player.scoreState.isDone);
     }
     
     get currentPlayer(): Player {
@@ -278,10 +292,38 @@ export class Game extends GameObject {
         return (this.currentIndex + 1) % this.players.length;
     }
 
+    ruleClicked(ruleName: string): void {
+        if (this.clickedRule && this.clickedRule !== ruleName) {
+            return;
+        }
+        this.currentPlayer.scoreState.toggle(ruleName);
+        this.clickedRule = this.currentPlayer.scoreState.isFrozen(ruleName) 
+            ? ruleName 
+            : null;
+        this.clickedRule ? enable(this.nextButton) : disable(this.nextButton);
+        this.clickedRule ? disable(this.rollButton) : enable(this.rollButton);
+    }
+
+    nextClicked(): void {
+        if (this.isDone) {
+            hide(this.htmlElement);
+            const end = new End(document.querySelector("#end-state")!, this.players);
+            end.update();
+            end.display();
+            return;
+        }
+        this.currentIndex = this.nextIndex;
+        this.rolls = this.maxRolls;
+        this.clickedRule = null;
+        this.dice.unfreeze();
+        this.update();
+        this.display();
+        disable(this.nextButton);
+    }
+
     override update(): void {
         this.dice.update();
-        this.scoreCard.update(...this.dice.values);
-        this.currentPlayer.update(this.scoreCard.score);
+        this.currentPlayer.update(...this.dice.values);
         this.rolls--;
     }
 
@@ -298,15 +340,34 @@ export class Game extends GameObject {
 
         this.currentPlayer.display();
         this.dice.display();
-        this.scoreCard.display();
     }
 }
 
-export class End extends GameObject {
-    override update(): void {
-        throw new Error('Method not implemented.');
+class End extends GameObject {
+    private players: Player[];
+
+    constructor(element: HTMLElement, players: Player[]) {
+        super(element);
+        this.players = players;
+
+        this.find("#restart").addEventListener("click", () => {
+            hide(this.htmlElement);
+        });
     }
+
+    override update(): void {
+        this.players = this.players.sort((a, b) => b.scoreState.score - a.scoreState.score);
+    }
+
     override display(): void {
-        throw new Error('Method not implemented.');
+        show(this.htmlElement);
+        const scoreList: HTMLOListElement = this.find("#winner") as HTMLOListElement;
+        scoreList.innerHTML = "";
+        const listItems: HTMLLIElement[] = this.players.map(player => {
+            const li = document.createElement("li");
+            li.textContent = `${player.playerName} - ${player.scoreState.score}`;
+            return li;
+        });
+        scoreList.replaceChildren(...listItems);
     }
 }

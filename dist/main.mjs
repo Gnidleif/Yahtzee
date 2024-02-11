@@ -6,6 +6,10 @@ const verboseTesting = false;
     t.ruleTests,
 ].forEach((th) => t.RunTests(th, verboseTesting));
 const startState = document.querySelector("#start-state");
-const start = new Start(startState);
+let start = new Start(startState);
 start.update();
 start.display();
+document.querySelector("#restart").addEventListener("click", () => {
+    start = new Start(startState);
+    start.display();
+});

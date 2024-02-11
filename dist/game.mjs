@@ -1,6 +1,6 @@
 import { hide, show, disable, enable, find, } from './utils.mjs';
 import { Die, Rule, } from './composite.mjs';
-import { DieLogic, NumberOfLogic, OfAKindLogic, StraightLogic, FullHouseLogic, ChanceLogic, YahtzeeLogic, BonusLogic, } from './logic.mjs';
+import { DieLogic, NumberOfLogic, BonusLogic, } from './logic.mjs';
 class GameObject {
     htmlElement;
     constructor(element) {
@@ -14,18 +14,18 @@ class GameObject {
 class ScoreCard extends GameObject {
     rules = [
         new Rule(new NumberOfLogic(1)),
-        new Rule(new NumberOfLogic(2)),
-        new Rule(new NumberOfLogic(3)),
-        new Rule(new NumberOfLogic(4)),
-        new Rule(new NumberOfLogic(5)),
-        new Rule(new NumberOfLogic(6)),
-        new Rule(new OfAKindLogic(3)),
-        new Rule(new OfAKindLogic(4)),
-        new Rule(new StraightLogic(4)),
-        new Rule(new StraightLogic(5)),
-        new Rule(new FullHouseLogic()),
-        new Rule(new ChanceLogic()),
-        new Rule(new YahtzeeLogic()),
+        // new Rule(new NumberOfLogic(2)),
+        // new Rule(new NumberOfLogic(3)),
+        // new Rule(new NumberOfLogic(4)),
+        // new Rule(new NumberOfLogic(5)),
+        // new Rule(new NumberOfLogic(6)),
+        // new Rule(new OfAKindLogic(3)),
+        // new Rule(new OfAKindLogic(4)),
+        // new Rule(new StraightLogic(4)),
+        // new Rule(new StraightLogic(5)),
+        // new Rule(new FullHouseLogic()),
+        // new Rule(new ChanceLogic()),
+        // new Rule(new YahtzeeLogic()),
     ];
     bonusAdded = false;
     bonus;
@@ -38,8 +38,20 @@ class ScoreCard extends GameObject {
             .filter(rule => rule.isFrozen)
             .reduce((acc, cur) => acc + cur.score, 0);
     }
-    toggle(id) {
-        this.rules.find(rule => rule.ruleName === id).toggle();
+    get isDone() {
+        return this.rules.every(rule => rule.isFrozen);
+    }
+    isFrozen(ruleName) {
+        return this.rules.find(rule => rule.ruleName === ruleName).isFrozen;
+    }
+    toggle(ruleName) {
+        this.rules.find(rule => rule.ruleName === ruleName).toggle();
+    }
+    freeze(ruleName) {
+        this.rules.find(rule => rule.ruleName === ruleName).freeze();
+    }
+    unfreeze() {
+        this.rules.forEach(rule => rule.unfreeze());
     }
     checkBonus() {
         const numberOfScores = this.rules
@@ -89,20 +101,25 @@ class Dice extends GameObject {
 }
 class Player extends GameObject {
     name;
-    score = 0;
-    constructor(element, name) {
+    scoreCard;
+    constructor(element, scoreCardTable, name) {
         super(element);
         this.name = name;
+        this.scoreCard = new ScoreCard(scoreCardTable);
     }
     get playerName() {
         return this.name;
     }
-    update(ruleScore = 0) {
-        this.score = ruleScore;
+    get scoreState() {
+        return this.scoreCard;
+    }
+    update(...diceValues) {
+        this.scoreCard.update(...diceValues);
     }
     display() {
         this.find("#player-name").textContent = this.name;
-        this.find("#player-score").textContent = `Score: ${this.score}`;
+        this.find("#player-score").textContent = `Score: ${this.scoreCard.score}`;
+        this.scoreCard.display();
     }
 }
 export class Start extends GameObject {
@@ -150,15 +167,15 @@ export class Start extends GameObject {
     }
     display() {
         show(this.htmlElement);
-        this.playerList.replaceChildren(...this.playerNames.map(name => {
+        const listItems = this.playerNames.map(name => {
             const li = document.createElement("li");
             li.textContent = name;
             return li;
-        }));
+        });
+        this.playerList.replaceChildren(...listItems);
     }
 }
-export class Game extends GameObject {
-    scoreCard;
+class Game extends GameObject {
     clickedRule = "";
     dice;
     maxRolls = 3;
@@ -167,12 +184,12 @@ export class Game extends GameObject {
     currentIndex = 0;
     rollButton;
     nextButton;
+    scoreCardTable;
     constructor(element, playerNames) {
         super(element);
-        this.players = playerNames.map(name => new Player(element, name));
+        this.scoreCardTable = this.find("#score-card");
+        this.players = playerNames.map(name => new Player(element, this.scoreCardTable, name));
         this.dice = new Dice(this.find(".dice"));
-        const scoreCardElement = this.find("#score-card");
-        this.scoreCard = new ScoreCard(scoreCardElement);
         this.rollButton = this.find("#roll");
         this.nextButton = this.find("#next");
         disable(this.nextButton);
@@ -183,26 +200,17 @@ export class Game extends GameObject {
             }
         });
         this.nextButton.addEventListener("click", () => {
-            this.currentIndex = this.nextIndex;
-            this.rolls = this.maxRolls;
-            this.clickedRule = null;
-            this.dice.unfreeze();
-            this.update();
-            this.display();
+            this.nextClicked();
         });
-        scoreCardElement.addEventListener("click", (evt) => {
+        this.scoreCardTable.addEventListener("click", (evt) => {
             const target = evt.target.parentNode;
-            if (!target.classList.contains("rule")) {
-                return;
+            if (target.classList.contains("rule")) {
+                this.ruleClicked(target.id);
             }
-            if (!this.clickedRule || this.clickedRule === target.id) {
-                this.clickedRule = !this.clickedRule
-                    ? target.id
-                    : null;
-                this.scoreCard.toggle(target.id);
-            }
-            this.clickedRule ? enable(this.nextButton) : disable(this.nextButton);
         });
+    }
+    get isDone() {
+        return this.players.every(player => player.scoreState.isDone);
     }
     get currentPlayer() {
         return this.players[this.currentIndex];
@@ -210,10 +218,36 @@ export class Game extends GameObject {
     get nextIndex() {
         return (this.currentIndex + 1) % this.players.length;
     }
+    ruleClicked(ruleName) {
+        if (this.clickedRule && this.clickedRule !== ruleName) {
+            return;
+        }
+        this.currentPlayer.scoreState.toggle(ruleName);
+        this.clickedRule = this.currentPlayer.scoreState.isFrozen(ruleName)
+            ? ruleName
+            : null;
+        this.clickedRule ? enable(this.nextButton) : disable(this.nextButton);
+        this.clickedRule ? disable(this.rollButton) : enable(this.rollButton);
+    }
+    nextClicked() {
+        if (this.isDone) {
+            hide(this.htmlElement);
+            const end = new End(document.querySelector("#end-state"), this.players);
+            end.update();
+            end.display();
+            return;
+        }
+        this.currentIndex = this.nextIndex;
+        this.rolls = this.maxRolls;
+        this.clickedRule = null;
+        this.dice.unfreeze();
+        this.update();
+        this.display();
+        disable(this.nextButton);
+    }
     update() {
         this.dice.update();
-        this.scoreCard.update(...this.dice.values);
-        this.currentPlayer.update(this.scoreCard.score);
+        this.currentPlayer.update(...this.dice.values);
         this.rolls--;
     }
     display() {
@@ -228,14 +262,29 @@ export class Game extends GameObject {
         this.nextButton.textContent = `Next: ${this.players[this.nextIndex].playerName}`;
         this.currentPlayer.display();
         this.dice.display();
-        this.scoreCard.display();
     }
 }
-export class End extends GameObject {
+class End extends GameObject {
+    players;
+    constructor(element, players) {
+        super(element);
+        this.players = players;
+        this.find("#restart").addEventListener("click", () => {
+            hide(this.htmlElement);
+        });
+    }
     update() {
-        throw new Error('Method not implemented.');
+        this.players = this.players.sort((a, b) => b.scoreState.score - a.scoreState.score);
     }
     display() {
-        throw new Error('Method not implemented.');
+        show(this.htmlElement);
+        const scoreList = this.find("#winner");
+        scoreList.innerHTML = "";
+        const listItems = this.players.map(player => {
+            const li = document.createElement("li");
+            li.textContent = `${player.playerName} - ${player.scoreState.score}`;
+            return li;
+        });
+        scoreList.replaceChildren(...listItems);
     }
 }
