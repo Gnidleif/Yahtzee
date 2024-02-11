@@ -11,28 +11,47 @@ import {
 } from "./game.mjs";
 
 export abstract class GameState extends GameObject {
-    abstract attachListeners(): void;
+    protected nextState: GameState | null = null;
+    constructor(element: HTMLElement) {
+        super(element);
+    }
+
+    switchState(): void {
+        hide(this.htmlElement);
+        this.nextState!.update();
+        this.nextState!.display();
+    }
+
+    abstract initialize(): void;
+    abstract attach(nextState: GameState): void;
 }
 
 export class Start extends GameState {
+    declare protected nextState: Game;
+
     private readonly addSection: HTMLElement;
     private readonly addButton: HTMLButtonElement;
     private readonly startButton: HTMLButtonElement;
     private readonly playerList: HTMLOListElement;
-    private readonly playerNames: string[] = [];
+    private playerNames: string[] = [];
 
-    constructor(element: HTMLElement) {
-        super(element);
+    constructor() {
+        super(document.querySelector("#start-state")!);
         this.addSection = this.find("#add-player");
         this.addButton = this.find("#add-button") as HTMLButtonElement;
         this.startButton = this.find("#start-game") as HTMLButtonElement;
         this.playerList = this.find("#player-list") as HTMLOListElement;
-        
+    }
+
+    override initialize(): void {
+        this.playerNames = [];
+        this.playerList.innerHTML = "";
         disable(this.addButton);
         disable(this.startButton);
     }
 
-    override attachListeners(): void {
+    override attach(nextState: Game): void {
+        this.nextState = nextState;
         this.addSection.querySelector("#player-name")!.addEventListener("input", (evt: Event) => {
             const target = evt.target! as HTMLInputElement;
             if (target.value.length >= 3) {
@@ -55,11 +74,9 @@ export class Start extends GameState {
             this.display();
         });
 
-        this.startButton.addEventListener("click", () => {            
-            hide(this.htmlElement);
-            const game = new Game(document.querySelector("#game-state")!, this.playerNames);
-            game.update();
-            game.display();
+        this.startButton.addEventListener("click", () => {     
+            this.nextState.initialize(...this.playerNames);
+            this.switchState();
         });
     }
 
@@ -78,29 +95,28 @@ export class Start extends GameState {
 }
 
 export class Game extends GameState {
+    declare protected nextState: End;
+
     private clickedRule: string | null = "";
 
     private readonly dice: Dice;
     private readonly maxRolls: number = 3;
     private rolls: number = 3;
 
-    private readonly players: Player[];
+    private players: Player[] = [];
     private currentIndex: number = 0;
 
     private readonly rollButton: HTMLButtonElement;
     private readonly nextButton: HTMLButtonElement;
     private readonly scoreCardTable: HTMLTableElement;
 
-    constructor(element: HTMLElement, playerNames: string[]) {
-        super(element);
+    constructor() {
+        super(document.querySelector("#game-state")!)
         this.scoreCardTable = this.find("#score-card") as HTMLTableElement;
-        this.players = playerNames.map(name => new Player(element, this.scoreCardTable, name));
         this.dice = new Dice(this.find(".dice"));
 
         this.rollButton = this.find("#roll") as HTMLButtonElement;
         this.nextButton = this.find("#next") as HTMLButtonElement;
-
-        disable(this.nextButton);
     }
 
     get isDone(): boolean {
@@ -128,13 +144,6 @@ export class Game extends GameState {
     }
 
     nextClicked(): void {
-        if (this.isDone) {
-            hide(this.htmlElement);
-            const end = new End(document.querySelector("#end-state")!, this.players);
-            end.update();
-            end.display();
-            return;
-        }
         this.currentIndex = this.nextIndex;
         this.rolls = this.maxRolls;
         this.clickedRule = null;
@@ -144,7 +153,13 @@ export class Game extends GameState {
         disable(this.nextButton);
     }
 
-    override attachListeners(): void {
+    override initialize(...playerNames: string[]): void {
+        this.players = playerNames.map(name => new Player(this.htmlElement, this.scoreCardTable, name));
+        disable(this.nextButton);
+    }
+
+    override attach(nextState: End): void {
+        this.nextState = nextState;
         this.rollButton.addEventListener("click", () => {
             if (this.rolls > 0) {
                 this.update();
@@ -153,6 +168,11 @@ export class Game extends GameState {
         });
 
         this.nextButton.addEventListener("click", () => {
+            if (this.isDone) {
+                this.nextState.initialize(...this.players);
+                this.switchState();
+                return;
+            }
             this.nextClicked();
         });
 
@@ -187,18 +207,26 @@ export class Game extends GameState {
 }
 
 export class End extends GameState {
-    private players: Player[];
-    private readonly scoreList: HTMLOListElement;
+    declare protected nextState: Start;
 
-    constructor(element: HTMLElement, players: Player[]) {
-        super(element);
-        this.players = players.sort((a, b) => b.scoreState.score - a.scoreState.score);
-        this.scoreList = this.find("#winner") as HTMLOListElement;
+    private players: Player[] = [];
+    private readonly winnerList: HTMLOListElement;
+
+    constructor() {
+        super(document.querySelector("#end-state")!);
+        this.winnerList = this.find("#winner") as HTMLOListElement;
     }
 
-    override attachListeners(): void {
+    override initialize(...players: Player[]): void {
+        this.players = players.sort((a, b) => b.scoreState.score - a.scoreState.score);
+        this.winnerList.innerHTML = "";
+    }
+
+    override attach(nextState: Start): void {
+        this.nextState = nextState;
         this.find("#restart").addEventListener("click", () => {
-            hide(this.htmlElement);
+            this.nextState.initialize();
+            this.switchState();
         });
     }
 
@@ -213,6 +241,6 @@ export class End extends GameState {
             li.textContent = `${player.playerName} - ${player.scoreState.score}`;
             return li;
         });
-        this.scoreList.replaceChildren(...listItems);
+        this.winnerList.replaceChildren(...listItems);
     }
 }

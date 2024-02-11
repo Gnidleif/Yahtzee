@@ -1,6 +1,15 @@
 import { disable, enable, hide, show, } from "./utils.mjs";
 import { GameObject, Dice, Player, } from "./game.mjs";
 export class GameState extends GameObject {
+    nextState = null;
+    constructor(element) {
+        super(element);
+    }
+    switchState() {
+        hide(this.htmlElement);
+        this.nextState.update();
+        this.nextState.display();
+    }
 }
 export class Start extends GameState {
     addSection;
@@ -8,16 +17,21 @@ export class Start extends GameState {
     startButton;
     playerList;
     playerNames = [];
-    constructor(element) {
-        super(element);
+    constructor() {
+        super(document.querySelector("#start-state"));
         this.addSection = this.find("#add-player");
         this.addButton = this.find("#add-button");
         this.startButton = this.find("#start-game");
         this.playerList = this.find("#player-list");
+    }
+    initialize() {
+        this.playerNames = [];
+        this.playerList.innerHTML = "";
         disable(this.addButton);
         disable(this.startButton);
     }
-    attachListeners() {
+    attach(nextState) {
+        this.nextState = nextState;
         this.addSection.querySelector("#player-name").addEventListener("input", (evt) => {
             const target = evt.target;
             if (target.value.length >= 3) {
@@ -39,10 +53,8 @@ export class Start extends GameState {
             this.display();
         });
         this.startButton.addEventListener("click", () => {
-            hide(this.htmlElement);
-            const game = new Game(document.querySelector("#game-state"), this.playerNames);
-            game.update();
-            game.display();
+            this.nextState.initialize(...this.playerNames);
+            this.switchState();
         });
     }
     update() {
@@ -62,19 +74,17 @@ export class Game extends GameState {
     dice;
     maxRolls = 3;
     rolls = 3;
-    players;
+    players = [];
     currentIndex = 0;
     rollButton;
     nextButton;
     scoreCardTable;
-    constructor(element, playerNames) {
-        super(element);
+    constructor() {
+        super(document.querySelector("#game-state"));
         this.scoreCardTable = this.find("#score-card");
-        this.players = playerNames.map(name => new Player(element, this.scoreCardTable, name));
         this.dice = new Dice(this.find(".dice"));
         this.rollButton = this.find("#roll");
         this.nextButton = this.find("#next");
-        disable(this.nextButton);
     }
     get isDone() {
         return this.players.every(player => player.scoreState.isDone);
@@ -97,13 +107,6 @@ export class Game extends GameState {
         this.clickedRule ? disable(this.rollButton) : enable(this.rollButton);
     }
     nextClicked() {
-        if (this.isDone) {
-            hide(this.htmlElement);
-            const end = new End(document.querySelector("#end-state"), this.players);
-            end.update();
-            end.display();
-            return;
-        }
         this.currentIndex = this.nextIndex;
         this.rolls = this.maxRolls;
         this.clickedRule = null;
@@ -112,7 +115,12 @@ export class Game extends GameState {
         this.display();
         disable(this.nextButton);
     }
-    attachListeners() {
+    initialize(...playerNames) {
+        this.players = playerNames.map(name => new Player(this.htmlElement, this.scoreCardTable, name));
+        disable(this.nextButton);
+    }
+    attach(nextState) {
+        this.nextState = nextState;
         this.rollButton.addEventListener("click", () => {
             if (this.rolls > 0) {
                 this.update();
@@ -120,6 +128,11 @@ export class Game extends GameState {
             }
         });
         this.nextButton.addEventListener("click", () => {
+            if (this.isDone) {
+                this.nextState.initialize(...this.players);
+                this.switchState();
+                return;
+            }
             this.nextClicked();
         });
         this.scoreCardTable.addEventListener("click", (evt) => {
@@ -149,16 +162,21 @@ export class Game extends GameState {
     }
 }
 export class End extends GameState {
-    players;
-    scoreList;
-    constructor(element, players) {
-        super(element);
-        this.players = players.sort((a, b) => b.scoreState.score - a.scoreState.score);
-        this.scoreList = this.find("#winner");
+    players = [];
+    winnerList;
+    constructor() {
+        super(document.querySelector("#end-state"));
+        this.winnerList = this.find("#winner");
     }
-    attachListeners() {
+    initialize(...players) {
+        this.players = players.sort((a, b) => b.scoreState.score - a.scoreState.score);
+        this.winnerList.innerHTML = "";
+    }
+    attach(nextState) {
+        this.nextState = nextState;
         this.find("#restart").addEventListener("click", () => {
-            hide(this.htmlElement);
+            this.nextState.initialize();
+            this.switchState();
         });
     }
     update() {
@@ -170,6 +188,6 @@ export class End extends GameState {
             li.textContent = `${player.playerName} - ${player.scoreState.score}`;
             return li;
         });
-        this.scoreList.replaceChildren(...listItems);
+        this.winnerList.replaceChildren(...listItems);
     }
 }

@@ -11,12 +11,16 @@ const verboseTesting = false;
     t.ruleTests,
 ].forEach((th) => t.RunTests(th, verboseTesting));
 
-const startState: HTMLElement = document.querySelector("#start-state")!;
-let start = new Start(startState);
-start.update();
-start.display();
+const states: GameState[] = [
+    new Start(),
+    new Game(),
+    new End(),
+];
 
-document.querySelector("#restart")!.addEventListener("click", () => {
-    start = new Start(startState);
-    start.display();
+states.forEach((state) => {
+    state.attach(states[(states.indexOf(state) + 1) % states.length]);
+    state.initialize();
 });
+
+states[0].update();
+states[0].display();

@@ -1,6 +1,6 @@
 import { hide, show, find, } from './utils.mjs';
 import { Die, Rule, } from './composite.mjs';
-import { DieLogic, NumberOfLogic, BonusLogic, } from './logic.mjs';
+import { DieLogic, NumberOfLogic, OfAKindLogic, StraightLogic, FullHouseLogic, ChanceLogic, YahtzeeLogic, BonusLogic, } from './logic.mjs';
 export class GameObject {
     htmlElement;
     constructor(element) {
@@ -14,18 +14,18 @@ export class GameObject {
 export class ScoreCard extends GameObject {
     rules = [
         new Rule(new NumberOfLogic(1)),
-        // new Rule(new NumberOfLogic(2)),
-        // new Rule(new NumberOfLogic(3)),
-        // new Rule(new NumberOfLogic(4)),
-        // new Rule(new NumberOfLogic(5)),
-        // new Rule(new NumberOfLogic(6)),
-        // new Rule(new OfAKindLogic(3)),
-        // new Rule(new OfAKindLogic(4)),
-        // new Rule(new StraightLogic(4)),
-        // new Rule(new StraightLogic(5)),
-        // new Rule(new FullHouseLogic()),
-        // new Rule(new ChanceLogic()),
-        // new Rule(new YahtzeeLogic()),
+        new Rule(new NumberOfLogic(2)),
+        new Rule(new NumberOfLogic(3)),
+        new Rule(new NumberOfLogic(4)),
+        new Rule(new NumberOfLogic(5)),
+        new Rule(new NumberOfLogic(6)),
+        new Rule(new OfAKindLogic(3)),
+        new Rule(new OfAKindLogic(4)),
+        new Rule(new StraightLogic(4)),
+        new Rule(new StraightLogic(5)),
+        new Rule(new FullHouseLogic()),
+        new Rule(new ChanceLogic()),
+        new Rule(new YahtzeeLogic()),
     ];
     bonusAdded = false;
     bonus;

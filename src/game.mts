@@ -39,18 +39,18 @@ export abstract class GameObject {
 export class ScoreCard extends GameObject {
     private readonly rules: Rule[] = [
         new Rule(new NumberOfLogic(1)),
-        // new Rule(new NumberOfLogic(2)),
-        // new Rule(new NumberOfLogic(3)),
-        // new Rule(new NumberOfLogic(4)),
-        // new Rule(new NumberOfLogic(5)),
-        // new Rule(new NumberOfLogic(6)),
-        // new Rule(new OfAKindLogic(3)),
-        // new Rule(new OfAKindLogic(4)),
-        // new Rule(new StraightLogic(4)),
-        // new Rule(new StraightLogic(5)),
-        // new Rule(new FullHouseLogic()),
-        // new Rule(new ChanceLogic()),
-        // new Rule(new YahtzeeLogic()),
+        new Rule(new NumberOfLogic(2)),
+        new Rule(new NumberOfLogic(3)),
+        new Rule(new NumberOfLogic(4)),
+        new Rule(new NumberOfLogic(5)),
+        new Rule(new NumberOfLogic(6)),
+        new Rule(new OfAKindLogic(3)),
+        new Rule(new OfAKindLogic(4)),
+        new Rule(new StraightLogic(4)),
+        new Rule(new StraightLogic(5)),
+        new Rule(new FullHouseLogic()),
+        new Rule(new ChanceLogic()),
+        new Rule(new YahtzeeLogic()),
     ];
     private bonusAdded: boolean = false;
     private readonly bonus: Rule;
