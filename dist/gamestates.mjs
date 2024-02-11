@@ -96,10 +96,8 @@ export class Game extends GameState {
         return (this.currentIndex + 1) % this.players.length;
     }
     ruleClicked(ruleName) {
-        if (this.clickedRule && this.clickedRule !== ruleName) {
-            return;
-        }
-        if (!this.clickedRule && this.currentPlayer.scoreState.isFrozen(ruleName)) {
+        if ((this.clickedRule && this.clickedRule !== ruleName)
+            || (!this.clickedRule && this.currentPlayer.scoreState.isFrozen(ruleName))) {
             return;
         }
         this.currentPlayer.scoreState.toggle(ruleName);
