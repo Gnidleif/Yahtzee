@@ -1,6 +1,6 @@
 import { disable, enable, hide, show, } from "./utils.mjs";
 import { GameObject, Dice, Player, } from "./game.mjs";
-class GameState extends GameObject {
+export class GameState extends GameObject {
 }
 export class Start extends GameState {
     addSection;
@@ -17,7 +17,7 @@ export class Start extends GameState {
         disable(this.addButton);
         disable(this.startButton);
     }
-    update() {
+    attachListeners() {
         this.addSection.querySelector("#player-name").addEventListener("input", (evt) => {
             const target = evt.target;
             if (target.value.length >= 3) {
@@ -45,6 +45,8 @@ export class Start extends GameState {
             game.display();
         });
     }
+    update() {
+    }
     display() {
         show(this.htmlElement);
         const listItems = this.playerNames.map(name => {
@@ -55,7 +57,7 @@ export class Start extends GameState {
         this.playerList.replaceChildren(...listItems);
     }
 }
-class Game extends GameState {
+export class Game extends GameState {
     clickedRule = "";
     dice;
     maxRolls = 3;
@@ -73,21 +75,6 @@ class Game extends GameState {
         this.rollButton = this.find("#roll");
         this.nextButton = this.find("#next");
         disable(this.nextButton);
-        this.rollButton.addEventListener("click", () => {
-            if (this.rolls > 0) {
-                this.update();
-                this.display();
-            }
-        });
-        this.nextButton.addEventListener("click", () => {
-            this.nextClicked();
-        });
-        this.scoreCardTable.addEventListener("click", (evt) => {
-            const target = evt.target.parentNode;
-            if (target.classList.contains("rule")) {
-                this.ruleClicked(target.id);
-            }
-        });
     }
     get isDone() {
         return this.players.every(player => player.scoreState.isDone);
@@ -125,6 +112,23 @@ class Game extends GameState {
         this.display();
         disable(this.nextButton);
     }
+    attachListeners() {
+        this.rollButton.addEventListener("click", () => {
+            if (this.rolls > 0) {
+                this.update();
+                this.display();
+            }
+        });
+        this.nextButton.addEventListener("click", () => {
+            this.nextClicked();
+        });
+        this.scoreCardTable.addEventListener("click", (evt) => {
+            const target = evt.target.parentNode;
+            if (target.classList.contains("rule")) {
+                this.ruleClicked(target.id);
+            }
+        });
+    }
     update() {
         this.dice.update();
         this.currentPlayer.update(...this.dice.values);
@@ -144,27 +148,28 @@ class Game extends GameState {
         this.dice.display();
     }
 }
-class End extends GameObject {
+export class End extends GameState {
     players;
+    scoreList;
     constructor(element, players) {
         super(element);
-        this.players = players;
+        this.players = players.sort((a, b) => b.scoreState.score - a.scoreState.score);
+        this.scoreList = this.find("#winner");
+    }
+    attachListeners() {
         this.find("#restart").addEventListener("click", () => {
             hide(this.htmlElement);
         });
     }
     update() {
-        this.players = this.players.sort((a, b) => b.scoreState.score - a.scoreState.score);
     }
     display() {
         show(this.htmlElement);
-        const scoreList = this.find("#winner");
-        scoreList.innerHTML = "";
         const listItems = this.players.map(player => {
             const li = document.createElement("li");
             li.textContent = `${player.playerName} - ${player.scoreState.score}`;
             return li;
         });
-        scoreList.replaceChildren(...listItems);
+        this.scoreList.replaceChildren(...listItems);
     }
 }

@@ -1,6 +1,9 @@
 import * as t from "./testing.mjs";
 import {
+    GameState,
     Start,
+    Game,
+    End,
 } from "./gamestates.mjs";
 const verboseTesting = false;
 [
