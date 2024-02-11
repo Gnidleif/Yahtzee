@@ -135,6 +135,9 @@ export class Game extends GameState {
         if (this.clickedRule && this.clickedRule !== ruleName) {
             return;
         }
+        if (!this.clickedRule && this.currentPlayer.scoreState.isFrozen(ruleName)) {
+            return;
+        }
         this.currentPlayer.scoreState.toggle(ruleName);
         this.clickedRule = this.currentPlayer.scoreState.isFrozen(ruleName) 
             ? ruleName 
