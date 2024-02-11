@@ -1,5 +1,5 @@
 import { disable, enable, hide, show, } from "./utils.mjs";
-import { GameObject, Dice, Player, } from "./game.mjs";
+import { GameObject, Dice, Player, } from "./gameobjects.mjs";
 export class GameState extends GameObject {
     nextState = null;
     constructor(element) {
@@ -111,7 +111,7 @@ export class Game extends GameState {
         this.currentIndex = this.nextIndex;
         this.rolls = this.maxRolls;
         this.clickedRule = null;
-        this.dice.unfreeze();
+        this.dice.unfreezeAll();
         this.update();
         this.display();
         disable(this.nextButton);

@@ -8,7 +8,7 @@ import {
     GameObject,
     Dice,
     Player,
-} from "./game.mjs";
+} from "./gameobjects.mjs";
 
 export abstract class GameState extends GameObject {
     protected nextState: GameState | null = null;
@@ -148,7 +148,7 @@ export class Game extends GameState {
         this.currentIndex = this.nextIndex;
         this.rolls = this.maxRolls;
         this.clickedRule = null;
-        this.dice.unfreeze();
+        this.dice.unfreezeAll();
         this.update();
         this.display();
         disable(this.nextButton);

@@ -1,18 +1,43 @@
-import { hide, show, find, } from './utils.mjs';
-import { Die, Rule, } from './composite.mjs';
-import { DieLogic, NumberOfLogic, OfAKindLogic, StraightLogic, FullHouseLogic, ChanceLogic, YahtzeeLogic, BonusLogic, } from './logic.mjs';
-export class GameObject {
-    htmlElement;
-    constructor(element) {
+import {
+    hide,
+    show,
+    find,
+} from './utils.mjs';
+import {
+    Die,
+    Rule,
+}
+from './composite.mjs';
+import {
+    DieLogic,
+    NumberOfLogic,
+    OfAKindLogic,
+    StraightLogic,
+    FullHouseLogic,
+    ChanceLogic,
+    YahtzeeLogic,
+    BonusLogic,
+}
+from './logic.mjs';
+
+export abstract class GameObject {
+    protected readonly htmlElement: HTMLElement;
+
+    constructor(element: HTMLElement) {
         this.htmlElement = element;
         hide(this.htmlElement);
     }
-    find(selector) {
+
+    find(selector: string): HTMLElement {
         return find(this.htmlElement, selector);
     }
+
+    abstract update(): void;
+    abstract display(): void;
 }
+
 export class ScoreCard extends GameObject {
-    rules = [
+    private readonly rules: Rule[] = [
         new Rule(new NumberOfLogic(1)),
         new Rule(new NumberOfLogic(2)),
         new Rule(new NumberOfLogic(3)),
@@ -27,96 +52,120 @@ export class ScoreCard extends GameObject {
         new Rule(new ChanceLogic()),
         new Rule(new YahtzeeLogic()),
     ];
-    bonusAdded = false;
-    bonus;
-    constructor(element) {
+    private bonusAdded: boolean = false;
+    private readonly bonus: Rule;
+
+    constructor(element: HTMLTableElement) {
         super(element);
         this.bonus = new Rule(new BonusLogic(63));
     }
-    get score() {
+
+    get score(): number {
         return this.rules
             .filter(rule => rule.isFrozen)
             .reduce((acc, cur) => acc + cur.score, 0);
     }
-    get isDone() {
+
+    get isDone(): boolean {
         return this.rules.every(rule => rule.isFrozen);
     }
-    isFrozen(ruleName) {
-        return this.rules.find(rule => rule.ruleName === ruleName).isFrozen;
+
+    isFrozen(ruleName: string): boolean {
+        return this.rules.find(rule => rule.ruleName === ruleName)!.isFrozen;
     }
-    toggle(ruleName) {
-        this.rules.find(rule => rule.ruleName === ruleName).toggle();
+
+    toggle(ruleName: string): void {
+        this.rules.find(rule => rule.ruleName === ruleName)!.toggle();
     }
-    freeze(ruleName) {
-        this.rules.find(rule => rule.ruleName === ruleName).freeze();
+
+    freeze(ruleName: string): void {
+        this.rules.find(rule => rule.ruleName === ruleName)!.freeze();
     }
-    unfreeze() {
-        this.rules.forEach(rule => rule.unfreeze());
-    }
-    checkBonus() {
-        const numberOfScores = this.rules
+
+    checkBonus(): void {
+        const allNumberOfs: Rule[] = this.rules
+            .filter(rule => rule.checkType(NumberOfLogic));
+
+        const numberOfScores: number[] = allNumberOfs
             .filter(rule => rule.isFrozen)
-            .filter(rule => rule.checkType(NumberOfLogic))
             .map(rule => rule.score);
+
         if (numberOfScores.length === 0) {
             return;
         }
+
         this.bonus.update(...numberOfScores);
-        if (this.bonus.score > 0 || numberOfScores.length === 6) {
+
+        if (this.bonus.score > 0 || numberOfScores.length === allNumberOfs.length) {
             this.bonus.toggle();
-            this.rules.splice(6, 0, this.bonus);
+            this.rules.splice(allNumberOfs.length, 0, this.bonus);
             this.bonusAdded = true;
         }
     }
-    update(...diceValues) {
+
+    override update(...diceValues: number[]): void {
         this.rules.forEach(rule => rule.update(...diceValues));
         if (!this.bonusAdded) {
             this.checkBonus();
         }
     }
-    display() {
+
+    override display(): void {
         show(this.htmlElement);
         this.htmlElement.replaceChildren(...this.rules.map(rule => rule.display()));
     }
 }
+
 export class Dice extends GameObject {
-    dice;
-    constructor(element, dieCount = 5, sides = 6) {
+    private readonly dice: Die[];
+
+    constructor(element: HTMLElement, dieCount: number = 5, sides: number = 6) {
         super(element);
-        this.dice = Array.from({ length: dieCount }, () => new Die(new DieLogic(sides)));
+        this.dice = Array.from({ length: dieCount }, 
+            () => new Die(new DieLogic(sides)));
     }
-    get values() {
+
+    get values(): number[] {
         return this.dice.map(die => die.currentValue);
     }
-    unfreeze() {
+
+    unfreezeAll(): void {
         this.dice.forEach(die => die.unfreeze());
     }
-    update() {
+
+    override update(): void {
         this.dice.forEach(die => die.roll());
     }
-    display() {
+
+    override display(): void {
         show(this.htmlElement, "flex");
         this.htmlElement.replaceChildren(...this.dice.map(die => die.display()));
     }
 }
+
 export class Player extends GameObject {
-    name;
-    scoreCard;
-    constructor(element, scoreCardTable, name) {
+    private readonly name: string;
+    private readonly scoreCard: ScoreCard;
+
+    constructor(element: HTMLElement, scoreCardTable: HTMLTableElement, name: string) {
         super(element);
         this.name = name;
         this.scoreCard = new ScoreCard(scoreCardTable);
     }
-    get playerName() {
+
+    get playerName(): string {
         return this.name;
     }
-    get scoreState() {
+
+    get scoreState(): ScoreCard {
         return this.scoreCard;
     }
-    update(...diceValues) {
+
+    override update(...diceValues: number[]): void {
         this.scoreCard.update(...diceValues);
     }
-    display() {
+
+    override display(): void {
         this.find("#player-name").textContent = this.name;
         this.find("#player-score").textContent = `Score: ${this.scoreCard.score}`;
         this.scoreCard.display();
