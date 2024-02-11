@@ -1,5 +1,5 @@
 import * as t from "./testing.mjs";
-import { Start, } from "./game.mjs";
+import { Start, } from "./gamestates.mjs";
 const verboseTesting = false;
 [
     t.dieTests,

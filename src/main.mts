@@ -1,7 +1,7 @@
 import * as t from "./testing.mjs";
 import {
     Start,
-} from "./game.mjs";
+} from "./gamestates.mjs";
 const verboseTesting = false;
 [
     t.dieTests,
