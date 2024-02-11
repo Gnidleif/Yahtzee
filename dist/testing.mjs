@@ -145,5 +145,3 @@ ruleTests.add(new Test("RuleDisplay out of range", (r) => r.update(-1), (x) => T
 // Composite tests
 ruleTests.add(new Test("Rule constructor", () => new c.Rule(new l.NumberOfLogic(6)), (x) => TestHandler.assertType(c.Rule, x)));
 ruleTests.add(new Test("Rule check", (r) => { r.update(1, 2, 3, 4, 5, 6); return r.display(); }, (e) => TestHandler.assertTrue(e.children[1].textContent === "6"), new c.Rule(new l.NumberOfLogic(6))));
-ruleTests.add(new Test("Rule freeze", (r) => { r.display().click(); return r.isFrozen; }, (x) => TestHandler.assertTrue(x), new c.Rule(new l.NumberOfLogic(6))));
-ruleTests.add(new Test("Rule unfreeze", (r) => { r.display().click(); r.display().click(); return r.isFrozen; }, (x) => TestHandler.assertFalse(x), new c.Rule(new l.NumberOfLogic(6))));

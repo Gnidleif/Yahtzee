@@ -6,7 +6,6 @@ const verboseTesting = false;
     t.ruleTests,
 ].forEach((th) => t.RunTests(th, verboseTesting));
 const startState = document.querySelector("#start-state");
-const gameState = document.querySelector("#game-state");
-const endState = document.querySelector("#end-state");
 const start = new Start(startState);
+start.update();
 start.display();

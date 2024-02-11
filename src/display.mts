@@ -42,6 +42,7 @@ export class RuleDisplay extends Displayable {
     constructor(id: string) {
         super(document.createElement("tr"));
         this.element.classList.add("rule");
+        this.element.id = id;
 
         const nameCell = document.createElement("td");
         nameCell.textContent = id;

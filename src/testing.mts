@@ -324,11 +324,3 @@ ruleTests.add(new Test("Rule check",
     (r: c.Rule) => { r.update(1, 2, 3, 4, 5, 6); return r.display(); },
     (e: HTMLElement) => TestHandler.assertTrue(e.children[1].textContent === "6"),
     new c.Rule(new l.NumberOfLogic(6))));
-ruleTests.add(new Test("Rule freeze",
-    (r: c.Rule) => { r.display().click(); return r.isFrozen; },
-    (x: boolean) => TestHandler.assertTrue(x),
-    new c.Rule(new l.NumberOfLogic(6))));
-ruleTests.add(new Test("Rule unfreeze",
-    (r: c.Rule) => { r.display().click(); r.display().click(); return r.isFrozen; },
-    (x: boolean) => TestHandler.assertFalse(x),
-    new c.Rule(new l.NumberOfLogic(6))));

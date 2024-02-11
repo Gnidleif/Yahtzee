@@ -15,9 +15,6 @@ class FreezableComposite extends Composite {
     constructor(display, logic) {
         super(display, logic);
         this.displayComponent.htmlElement.classList.add("freezable");
-        this.displayComponent.htmlElement.addEventListener("click", () => {
-            this.toggle();
-        });
     }
     get isFrozen() {
         return this.logicComponent.isFrozen;
@@ -26,10 +23,21 @@ class FreezableComposite extends Composite {
         this.logicComponent.toggle();
         this.displayComponent.htmlElement.classList.toggle("frozen");
     }
+    freeze() {
+        this.logicComponent.freeze();
+        this.displayComponent.htmlElement.classList.add("frozen");
+    }
+    unfreeze() {
+        this.logicComponent.unfreeze();
+        this.displayComponent.htmlElement.classList.remove("frozen");
+    }
 }
 export class Die extends FreezableComposite {
     constructor(logicObject = new DieLogic(6)) {
         super(new DieDisplay(), logicObject);
+        this.displayComponent.htmlElement.addEventListener("click", () => {
+            this.toggle();
+        });
     }
     get currentValue() {
         return this.logicComponent.currentValue;
@@ -45,6 +53,9 @@ export class Rule extends FreezableComposite {
     }
     get score() {
         return this.logicComponent.score;
+    }
+    get ruleName() {
+        return this.logicComponent.ruleName;
     }
     checkType(type) {
         return this.logicComponent instanceof type;
