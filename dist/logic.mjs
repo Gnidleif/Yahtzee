@@ -71,6 +71,16 @@ export class NumberOfLogic extends RuleLogicBase {
             .reduce((acc, cur) => acc + cur, 0);
     }
 }
+export class PairLogic extends RuleLogicBase {
+    tracked;
+    constructor(tracked) {
+        super(new.target.name + tracked);
+        this.tracked = tracked;
+    }
+    calculate(...values) {
+        return 0;
+    }
+}
 export class OfAKindLogic extends RuleLogicBase {
     tracked;
     constructor(tracked) {

@@ -17,6 +17,7 @@ import {
     ChanceLogic,
     YahtzeeLogic,
     BonusLogic,
+    PairLogic,
 }
 from './logic.mjs';
 
@@ -37,27 +38,29 @@ export abstract class GameObject {
 }
 
 export class ScoreCard extends GameObject {
-    private readonly rules: Rule[] = [
-        new Rule(new NumberOfLogic(1)),
-        new Rule(new NumberOfLogic(2)),
-        new Rule(new NumberOfLogic(3)),
-        new Rule(new NumberOfLogic(4)),
-        new Rule(new NumberOfLogic(5)),
-        new Rule(new NumberOfLogic(6)),
-        new Rule(new OfAKindLogic(3)),
-        new Rule(new OfAKindLogic(4)),
-        new Rule(new StraightLogic(4)),
-        new Rule(new StraightLogic(5)),
-        new Rule(new FullHouseLogic()),
-        new Rule(new ChanceLogic()),
-        new Rule(new YahtzeeLogic()),
-    ];
+    private readonly rules: Rule[];
     private bonusAdded: boolean = false;
     private readonly bonus: Rule;
 
-    constructor(element: HTMLTableElement) {
+    constructor(element: HTMLTableElement, dieCount: number) {
         super(element);
-        this.bonus = new Rule(new BonusLogic(63));
+        let bonusAim = 0;
+        this.rules = [];
+        for (let i = 1; i <= 6; i++) {
+            this.rules.push(new Rule(new NumberOfLogic(i)));
+            bonusAim += i;
+        }
+        bonusAim *= Math.ceil(dieCount / 2);
+        this.bonus = new Rule(new BonusLogic(bonusAim));
+        this.rules.push(new Rule(new PairLogic(1)));
+        this.rules.push(new Rule(new PairLogic(2)));
+        this.rules.push(new Rule(new OfAKindLogic(3)));
+        this.rules.push(new Rule(new OfAKindLogic(4)));
+        this.rules.push(new Rule(new StraightLogic(4)));
+        this.rules.push(new Rule(new StraightLogic(5)));
+        this.rules.push(new Rule(new FullHouseLogic()));
+        this.rules.push(new Rule(new ChanceLogic()));
+        this.rules.push(new Rule(new YahtzeeLogic()));
     }
 
     get score(): number {
@@ -147,10 +150,10 @@ export class Player extends GameObject {
     private readonly name: string;
     private readonly scoreCard: ScoreCard;
 
-    constructor(element: HTMLElement, scoreCardTable: HTMLTableElement, name: string) {
+    constructor(element: HTMLElement, scoreCardTable: HTMLTableElement, name: string, dieCount: number) {
         super(element);
         this.name = name;
-        this.scoreCard = new ScoreCard(scoreCardTable);
+        this.scoreCard = new ScoreCard(scoreCardTable, dieCount);
     }
 
     get playerName(): string {

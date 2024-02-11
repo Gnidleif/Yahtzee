@@ -97,6 +97,19 @@ export class NumberOfLogic extends RuleLogicBase {
     }
 }
 
+export class PairLogic extends RuleLogicBase {
+    private readonly tracked: number;
+
+    constructor(tracked: number) {
+        super(new.target.name + tracked);
+        this.tracked = tracked;
+    }
+    
+    override calculate(...values: number[]): number {
+        return 0;
+    }
+}
+
 export class OfAKindLogic extends RuleLogicBase {
     private readonly tracked: number;
 

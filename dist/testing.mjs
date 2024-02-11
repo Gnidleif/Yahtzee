@@ -104,6 +104,14 @@ ruleTests.add(new Test("NumberOfLogic calculate", () => new l.NumberOfLogic(6).c
 ruleTests.add(new Test("NumberOfLogic update", (x) => { x.update(1, 2, 3, 4, 5, 6); return x.score; }, (x) => TestHandler.assertTrue(x === 6), new l.NumberOfLogic(6)));
 ruleTests.add(new Test("NumberOfLogic update frozen", (x) => { x.freeze(); x.update(1, 2, 3, 4, 5, 6); return x.score; }, (x) => TestHandler.assertTrue(x === 0), new l.NumberOfLogic(6)));
 ruleTests.add(new Test("NumberOfLogic name", (n) => n.ruleName, (x) => TestHandler.assertEquals("NumberOf6", x), new l.NumberOfLogic(6)));
+ruleTests.add(new Test("PairLogic constructor", () => new l.PairLogic(2), (x) => TestHandler.assertType(l.PairLogic, x)));
+ruleTests.add(new Test("PairLogic(1) calculate", () => new l.PairLogic(1).calculate(1, 1, 2, 2, 3), (x) => TestHandler.assertTrue(x === 4)));
+ruleTests.add(new Test("PairLogic(2) calculate (low)", () => new l.PairLogic(2).calculate(1, 1, 2, 2, 3), (x) => TestHandler.assertTrue(x === 6)));
+ruleTests.add(new Test("PairLogic(2) calculate (high)", () => new l.PairLogic(2).calculate(4, 4, 5, 5, 6), (x) => TestHandler.assertTrue(x === 18)));
+ruleTests.add(new Test("PairLogic(2) calculate (all same)", () => new l.PairLogic(2).calculate(1, 1, 1, 1, 1), (x) => TestHandler.assertTrue(x === 0)));
+ruleTests.add(new Test("PairLogic(2) update", (p) => { p.update(1, 1, 2, 2, 3); return p.score; }, (x) => TestHandler.assertTrue(x === 6), new l.PairLogic(2)));
+ruleTests.add(new Test("PairLogic(2) update frozen", (p) => { p.freeze(); p.update(1, 1, 2, 2, 3); return p.score; }, (x) => TestHandler.assertTrue(x === 0), new l.PairLogic(2)));
+ruleTests.add(new Test("PairLogic(2) name", (p) => p.ruleName, (x) => TestHandler.assertEquals("Pair2", x), new l.PairLogic(2)));
 ruleTests.add(new Test("OfAKindLogic constructor", () => new l.OfAKindLogic(3), (x) => TestHandler.assertType(l.OfAKindLogic, x)));
 ruleTests.add(new Test("OfAKindLogic calculate", () => new l.OfAKindLogic(3).calculate(1, 1, 1, 2, 2), (x) => TestHandler.assertTrue(x === 3)));
 ruleTests.add(new Test("OfAKindLogic update", (o) => { o.update(1, 1, 1, 2, 2); return o.score; }, (x) => TestHandler.assertTrue(x === 3), new l.OfAKindLogic(3)));

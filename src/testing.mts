@@ -174,6 +174,34 @@ ruleTests.add(new Test("NumberOfLogic name",
     (x: string) => TestHandler.assertEquals("NumberOf6", x),
     new l.NumberOfLogic(6)));
 
+ruleTests.add(new Test("PairLogic constructor",
+    () => new l.PairLogic(2),
+    (x: l.ILogic) => TestHandler.assertType(l.PairLogic, x)));
+ruleTests.add(new Test("PairLogic(1) calculate",
+    () => new l.PairLogic(1).calculate(1, 1, 2, 2, 3),
+    (x: number) => TestHandler.assertTrue(x === 4)));
+ruleTests.add(new Test("PairLogic(2) calculate (low)",
+    () => new l.PairLogic(2).calculate(1, 1, 2, 2, 3),
+    (x: number) => TestHandler.assertTrue(x === 6)));
+ruleTests.add(new Test("PairLogic(2) calculate (high)",
+    () => new l.PairLogic(2).calculate(4, 4, 5, 5, 6),
+    (x: number) => TestHandler.assertTrue(x === 18)));
+ruleTests.add(new Test("PairLogic(2) calculate (all same)",
+    () => new l.PairLogic(2).calculate(1, 1, 1, 1, 1),
+    (x: number) => TestHandler.assertTrue(x === 0)));
+ruleTests.add(new Test("PairLogic(2) update",
+    (p: l.PairLogic) => { p.update(1, 1, 2, 2, 3); return p.score; },
+    (x: number) => TestHandler.assertTrue(x === 6),
+    new l.PairLogic(2)));
+ruleTests.add(new Test("PairLogic(2) update frozen",
+    (p: l.PairLogic) => { p.freeze(); p.update(1, 1, 2, 2, 3); return p.score; },
+    (x: number) => TestHandler.assertTrue(x === 0),
+    new l.PairLogic(2)));
+ruleTests.add(new Test("PairLogic(2) name",
+    (p: l.PairLogic) => p.ruleName,
+    (x: string) => TestHandler.assertEquals("Pair2", x),
+    new l.PairLogic(2)));
+
 ruleTests.add(new Test("OfAKindLogic constructor",
     () => new l.OfAKindLogic(3),
     (x: l.ILogic) => TestHandler.assertType(l.OfAKindLogic, x)));

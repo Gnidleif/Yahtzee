@@ -108,6 +108,7 @@ export class Game extends GameState {
 
     private readonly rollButton: HTMLButtonElement;
     private readonly nextButton: HTMLButtonElement;
+    private readonly endButton: HTMLButtonElement;
     private readonly scoreCardTable: HTMLTableElement;
 
     constructor() {
@@ -117,6 +118,7 @@ export class Game extends GameState {
 
         this.rollButton = this.find("#roll") as HTMLButtonElement;
         this.nextButton = this.find("#next") as HTMLButtonElement;
+        this.endButton = this.find("#end") as HTMLButtonElement;
     }
 
     get isDone(): boolean {
@@ -158,7 +160,7 @@ export class Game extends GameState {
         this.clickedRule = null;
         this.currentIndex = 0;
         this.rolls = 3;
-        this.players = playerNames.map(name => new Player(this.htmlElement, this.scoreCardTable, name));
+        this.players = playerNames.map(name => new Player(this.htmlElement, this.scoreCardTable, name, this.dice.values.length));
         disable(this.nextButton);
     }
 
@@ -178,6 +180,11 @@ export class Game extends GameState {
                 return;
             }
             this.nextClicked();
+        });
+
+        this.endButton.addEventListener("click", () => {
+            this.nextState.initialize(...this.players);
+            this.switchState();
         });
 
         this.scoreCardTable.addEventListener("click", (evt: Event) => {

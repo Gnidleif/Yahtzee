@@ -1,6 +1,6 @@
 import { hide, show, find, } from './utils.mjs';
 import { Die, Rule, } from './composite.mjs';
-import { DieLogic, NumberOfLogic, OfAKindLogic, StraightLogic, FullHouseLogic, ChanceLogic, YahtzeeLogic, BonusLogic, } from './logic.mjs';
+import { DieLogic, NumberOfLogic, OfAKindLogic, StraightLogic, FullHouseLogic, ChanceLogic, YahtzeeLogic, BonusLogic, PairLogic, } from './logic.mjs';
 export class GameObject {
     htmlElement;
     constructor(element) {
@@ -12,26 +12,28 @@ export class GameObject {
     }
 }
 export class ScoreCard extends GameObject {
-    rules = [
-        new Rule(new NumberOfLogic(1)),
-        new Rule(new NumberOfLogic(2)),
-        new Rule(new NumberOfLogic(3)),
-        new Rule(new NumberOfLogic(4)),
-        new Rule(new NumberOfLogic(5)),
-        new Rule(new NumberOfLogic(6)),
-        new Rule(new OfAKindLogic(3)),
-        new Rule(new OfAKindLogic(4)),
-        new Rule(new StraightLogic(4)),
-        new Rule(new StraightLogic(5)),
-        new Rule(new FullHouseLogic()),
-        new Rule(new ChanceLogic()),
-        new Rule(new YahtzeeLogic()),
-    ];
+    rules;
     bonusAdded = false;
     bonus;
-    constructor(element) {
+    constructor(element, dieCount) {
         super(element);
-        this.bonus = new Rule(new BonusLogic(63));
+        let bonusAim = 0;
+        this.rules = [];
+        for (let i = 1; i <= 6; i++) {
+            this.rules.push(new Rule(new NumberOfLogic(i)));
+            bonusAim += i;
+        }
+        bonusAim *= Math.ceil(dieCount / 2);
+        this.bonus = new Rule(new BonusLogic(bonusAim));
+        this.rules.push(new Rule(new PairLogic(1)));
+        this.rules.push(new Rule(new PairLogic(2)));
+        this.rules.push(new Rule(new OfAKindLogic(3)));
+        this.rules.push(new Rule(new OfAKindLogic(4)));
+        this.rules.push(new Rule(new StraightLogic(4)));
+        this.rules.push(new Rule(new StraightLogic(5)));
+        this.rules.push(new Rule(new FullHouseLogic()));
+        this.rules.push(new Rule(new ChanceLogic()));
+        this.rules.push(new Rule(new YahtzeeLogic()));
     }
     get score() {
         return this.rules
@@ -100,10 +102,10 @@ export class Dice extends GameObject {
 export class Player extends GameObject {
     name;
     scoreCard;
-    constructor(element, scoreCardTable, name) {
+    constructor(element, scoreCardTable, name, dieCount) {
         super(element);
         this.name = name;
-        this.scoreCard = new ScoreCard(scoreCardTable);
+        this.scoreCard = new ScoreCard(scoreCardTable, dieCount);
     }
     get playerName() {
         return this.name;
