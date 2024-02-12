@@ -99,16 +99,17 @@ dieTests.add(new Test("Die unfreeze", (x) => { x.display().click(); x.display().
 export const ruleTests = new class RuleTests extends TestHandler {
 };
 // Logic tests
-ruleTests.add(new Test("NumberOfLogic constructor", () => new l.NumberOfLogic(6), (x) => TestHandler.assertType(l.NumberOfLogic, x)));
-ruleTests.add(new Test("NumberOfLogic calculate", () => new l.NumberOfLogic(6).calculate(1, 2, 3, 4, 5, 6), (x) => TestHandler.assertTrue(x === 6)));
-ruleTests.add(new Test("NumberOfLogic update", (x) => { x.update(1, 2, 3, 4, 5, 6); return x.score; }, (x) => TestHandler.assertTrue(x === 6), new l.NumberOfLogic(6)));
-ruleTests.add(new Test("NumberOfLogic update frozen", (x) => { x.freeze(); x.update(1, 2, 3, 4, 5, 6); return x.score; }, (x) => TestHandler.assertTrue(x === 0), new l.NumberOfLogic(6)));
-ruleTests.add(new Test("NumberOfLogic name", (n) => n.ruleName, (x) => TestHandler.assertEquals("NumberOf6", x), new l.NumberOfLogic(6)));
+ruleTests.add(new Test("SumOfLogic constructor", () => new l.SumOfLogic(6), (x) => TestHandler.assertType(l.SumOfLogic, x)));
+ruleTests.add(new Test("SumOfLogic calculate", () => new l.SumOfLogic(6).calculate(1, 2, 3, 4, 5, 6), (x) => TestHandler.assertTrue(x === 6)));
+ruleTests.add(new Test("SumOfLogic update", (x) => { x.update(1, 2, 3, 4, 5, 6); return x.score; }, (x) => TestHandler.assertTrue(x === 6), new l.SumOfLogic(6)));
+ruleTests.add(new Test("SumOfLogic update frozen", (x) => { x.freeze(); x.update(1, 2, 3, 4, 5, 6); return x.score; }, (x) => TestHandler.assertTrue(x === 0), new l.SumOfLogic(6)));
+ruleTests.add(new Test("SumOfLogic name", (n) => n.ruleName, (x) => TestHandler.assertEquals("SumOf6", x), new l.SumOfLogic(6)));
 ruleTests.add(new Test("PairLogic constructor", () => new l.PairLogic(2), (x) => TestHandler.assertType(l.PairLogic, x)));
-ruleTests.add(new Test("PairLogic(1) calculate", () => new l.PairLogic(1).calculate(1, 1, 2, 2, 3), (x) => TestHandler.assertTrue(x === 4)));
+ruleTests.add(new Test("PairLogic(1) calculate", () => new l.PairLogic(1).calculate(1, 1, 2, 2, 2), (x) => TestHandler.assertTrue(x === 4)));
 ruleTests.add(new Test("PairLogic(2) calculate (low)", () => new l.PairLogic(2).calculate(1, 1, 2, 2, 3), (x) => TestHandler.assertTrue(x === 6)));
 ruleTests.add(new Test("PairLogic(2) calculate (high)", () => new l.PairLogic(2).calculate(4, 4, 5, 5, 6), (x) => TestHandler.assertTrue(x === 18)));
 ruleTests.add(new Test("PairLogic(2) calculate (all same)", () => new l.PairLogic(2).calculate(1, 1, 1, 1, 1), (x) => TestHandler.assertTrue(x === 0)));
+ruleTests.add(new Test("PairLogic(1) calculate (all different)", () => new l.PairLogic(1).calculate(1, 2, 3, 4, 5), (x) => TestHandler.assertTrue(x === 0)));
 ruleTests.add(new Test("PairLogic(2) update", (p) => { p.update(1, 1, 2, 2, 3); return p.score; }, (x) => TestHandler.assertTrue(x === 6), new l.PairLogic(2)));
 ruleTests.add(new Test("PairLogic(2) update frozen", (p) => { p.freeze(); p.update(1, 1, 2, 2, 3); return p.score; }, (x) => TestHandler.assertTrue(x === 0), new l.PairLogic(2)));
 ruleTests.add(new Test("PairLogic(2) name", (p) => p.ruleName, (x) => TestHandler.assertEquals("Pair2", x), new l.PairLogic(2)));
@@ -151,5 +152,5 @@ ruleTests.add(new Test("RuleDisplay display", (r) => r.htmlElement, (x) => TestH
 ruleTests.add(new Test("RuleDisplay update", (r) => { r.update(50); return r.htmlElement.children[1]; }, (x) => TestHandler.assertEquals("50", x.textContent), new d.RuleDisplay("test")));
 ruleTests.add(new Test("RuleDisplay out of range", (r) => r.update(-1), (x) => TestHandler.assertType(RangeError, x), new d.RuleDisplay("test")));
 // Composite tests
-ruleTests.add(new Test("Rule constructor", () => new c.Rule(new l.NumberOfLogic(6)), (x) => TestHandler.assertType(c.Rule, x)));
-ruleTests.add(new Test("Rule check", (r) => { r.update(1, 2, 3, 4, 5, 6); return r.display(); }, (e) => TestHandler.assertTrue(e.children[1].textContent === "6"), new c.Rule(new l.NumberOfLogic(6))));
+ruleTests.add(new Test("Rule constructor", () => new c.Rule(new l.SumOfLogic(6)), (x) => TestHandler.assertType(c.Rule, x)));
+ruleTests.add(new Test("Rule check", (r) => { r.update(1, 2, 3, 4, 5, 6); return r.display(); }, (e) => TestHandler.assertTrue(e.children[1].textContent === "6"), new c.Rule(new l.SumOfLogic(6))));

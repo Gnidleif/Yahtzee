@@ -1,28 +1,45 @@
-import { disable, enable, hide, show, } from "./utils.mjs";
-import { GameObject, Dice, Player, } from "./gameobjects.mjs";
-export class GameState extends GameObject {
-    nextState = null;
+import { Displayable } from "./display.mjs";
+import { disable, enable, hide, show, find, } from "./utils.mjs";
+import { Dice, Player, } from "./gameobjects.mjs";
+export class StateObserver {
+    states;
+    currentState = 0;
+    constructor(...states) {
+        this.states = states;
+        this.states.forEach((state) => {
+            state.attach(this);
+            hide(state.htmlElement);
+        });
+    }
+    get current() {
+        return this.states[this.currentState];
+    }
+    start(...args) {
+        this.current.initialize(...args);
+        show(this.current.htmlElement);
+        this.current.display();
+    }
+    next(...args) {
+        hide(this.current.htmlElement);
+        this.currentState = (this.currentState + 1) % this.states.length;
+        this.start(...args);
+    }
+}
+export class GameState extends Displayable {
     constructor(element) {
         super(element);
     }
-    switchState() {
-        hide(this.htmlElement);
-        this.nextState.update();
-        this.nextState.display();
-    }
 }
 export class Start extends GameState {
-    addSection;
     addButton;
     startButton;
     playerList;
     playerNames = [];
     constructor() {
         super(document.querySelector("#start-state"));
-        this.addSection = this.find("#add-player");
-        this.addButton = this.find("#add-button");
-        this.startButton = this.find("#start-game");
-        this.playerList = this.find("#player-list");
+        this.addButton = find(this.element, "#add-button");
+        this.startButton = find(this.element, "#start-game");
+        this.playerList = find(this.element, "#player-list");
     }
     initialize() {
         this.playerNames = [];
@@ -30,9 +47,8 @@ export class Start extends GameState {
         disable(this.addButton);
         disable(this.startButton);
     }
-    attach(nextState) {
-        this.nextState = nextState;
-        this.addSection.querySelector("#player-name").addEventListener("input", (evt) => {
+    attach(observer) {
+        this.element.querySelector("#player-name").addEventListener("input", (evt) => {
             const target = evt.target;
             if (target.value.length >= 3) {
                 enable(this.addButton);
@@ -42,7 +58,7 @@ export class Start extends GameState {
             }
         });
         this.addButton.addEventListener("click", () => {
-            const input = this.addSection.querySelector("#player-name");
+            const input = this.element.querySelector("#player-name");
             const name = input.value;
             input.value = "";
             this.playerNames.push(name);
@@ -53,14 +69,10 @@ export class Start extends GameState {
             this.display();
         });
         this.startButton.addEventListener("click", () => {
-            this.nextState.initialize(...this.playerNames);
-            this.switchState();
+            observer.next(...this.playerNames);
         });
     }
-    update() {
-    }
     display() {
-        show(this.htmlElement);
         const listItems = this.playerNames.map(name => {
             const li = document.createElement("li");
             li.textContent = name;
@@ -70,7 +82,6 @@ export class Start extends GameState {
     }
 }
 export class Game extends GameState {
-    clickedRule = "";
     dice;
     maxRolls = 3;
     rolls = 3;
@@ -80,13 +91,14 @@ export class Game extends GameState {
     nextButton;
     endButton;
     scoreCardTable;
+    clickedRule = null;
     constructor() {
         super(document.querySelector("#game-state"));
-        this.scoreCardTable = this.find("#score-card");
-        this.dice = new Dice(this.find(".dice"));
-        this.rollButton = this.find("#roll");
-        this.nextButton = this.find("#next");
-        this.endButton = this.find("#end");
+        this.scoreCardTable = find(this.element, "#score-card");
+        this.dice = new Dice(find(this.element, ".dice"));
+        this.rollButton = find(this.element, "#roll");
+        this.nextButton = find(this.element, "#next");
+        this.endButton = find(this.element, "#end");
     }
     get isDone() {
         return this.players.every(player => player.scoreState.isDone);
@@ -97,7 +109,7 @@ export class Game extends GameState {
     get nextIndex() {
         return (this.currentIndex + 1) % this.players.length;
     }
-    ruleClicked(ruleName) {
+    onRuleClick(ruleName) {
         if ((this.clickedRule && this.clickedRule !== ruleName)
             || (!this.clickedRule && this.currentPlayer.scoreState.isFrozen(ruleName))) {
             return;
@@ -109,7 +121,7 @@ export class Game extends GameState {
         this.clickedRule ? enable(this.nextButton) : disable(this.nextButton);
         this.clickedRule ? disable(this.rollButton) : enable(this.rollButton);
     }
-    nextClicked() {
+    onNextClick() {
         this.currentIndex = this.nextIndex;
         this.rolls = this.maxRolls;
         this.clickedRule = null;
@@ -118,15 +130,20 @@ export class Game extends GameState {
         this.display();
         disable(this.nextButton);
     }
+    update() {
+        this.dice.update();
+        this.currentPlayer.update(...this.dice.values);
+        this.rolls--;
+    }
     initialize(...playerNames) {
         this.clickedRule = null;
         this.currentIndex = 0;
         this.rolls = 3;
         this.players = playerNames.map(name => new Player(this.htmlElement, this.scoreCardTable, name, this.dice.values.length));
         disable(this.nextButton);
+        this.update();
     }
-    attach(nextState) {
-        this.nextState = nextState;
+    attach(observer) {
         this.rollButton.addEventListener("click", () => {
             if (this.rolls > 0) {
                 this.update();
@@ -135,30 +152,22 @@ export class Game extends GameState {
         });
         this.nextButton.addEventListener("click", () => {
             if (this.isDone) {
-                this.nextState.initialize(...this.players);
-                this.switchState();
+                observer.next(...this.players);
                 return;
             }
-            this.nextClicked();
+            this.onNextClick();
         });
         this.endButton.addEventListener("click", () => {
-            this.nextState.initialize(...this.players);
-            this.switchState();
+            observer.next(...this.players);
         });
         this.scoreCardTable.addEventListener("click", (evt) => {
             const target = evt.target.parentNode;
             if (target.classList.contains("rule")) {
-                this.ruleClicked(target.id);
+                this.onRuleClick(target.id);
             }
         });
     }
-    update() {
-        this.dice.update();
-        this.currentPlayer.update(...this.dice.values);
-        this.rolls--;
-    }
     display() {
-        show(this.htmlElement);
         if (this.rolls === 0) {
             disable(this.rollButton);
         }
@@ -176,23 +185,18 @@ export class End extends GameState {
     winnerList;
     constructor() {
         super(document.querySelector("#end-state"));
-        this.winnerList = this.find("#winner");
+        this.winnerList = find(this.element, "#winner");
     }
     initialize(...players) {
         this.players = players.sort((a, b) => b.scoreState.score - a.scoreState.score);
         this.winnerList.innerHTML = "";
     }
-    attach(nextState) {
-        this.nextState = nextState;
-        this.find("#restart").addEventListener("click", () => {
-            this.nextState.initialize();
-            this.switchState();
+    attach(observer) {
+        find(this.element, "#restart").addEventListener("click", () => {
+            observer.next();
         });
     }
-    update() {
-    }
     display() {
-        show(this.htmlElement);
         const listItems = this.players.map(player => {
             const li = document.createElement("li");
             li.textContent = `${player.playerName} - ${player.scoreState.score}`;

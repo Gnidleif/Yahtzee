@@ -56,7 +56,7 @@ export class RuleLogicBase extends Freezable {
         }
     }
 }
-export class NumberOfLogic extends RuleLogicBase {
+export class SumOfLogic extends RuleLogicBase {
     tracked;
     constructor(tracked) {
         super(new.target.name + tracked);
@@ -78,7 +78,15 @@ export class PairLogic extends RuleLogicBase {
         this.tracked = tracked;
     }
     calculate(...values) {
-        return 0;
+        const pairCounts = values
+            .reduce((acc, cur) => acc.set(cur, (acc.get(cur) || 0) + 1), new Map());
+        const sorted = Array.from(pairCounts.keys())
+            .filter((key) => pairCounts.get(key) >= 2)
+            .sort((a, b) => b - a);
+        return sorted.length >= this.tracked
+            ? sorted.slice(0, this.tracked)
+                .reduce((acc, cur) => acc + cur * 2, 0)
+            : 0;
     }
 }
 export class OfAKindLogic extends RuleLogicBase {

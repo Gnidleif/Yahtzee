@@ -58,7 +58,7 @@ export abstract class RuleLogicBase extends Freezable {
     private readonly name: string;
     private currentScore: number = 0;
 
-    constructor(name: string) {
+    constructor(name: string | null) {
         super();
         this.name = (name || new.target.name).replace("Logic", "");
     }
@@ -78,7 +78,7 @@ export abstract class RuleLogicBase extends Freezable {
     }
 }
 
-export class NumberOfLogic extends RuleLogicBase {
+export class SumOfLogic extends RuleLogicBase {
     private readonly tracked: number;
 
     constructor(tracked: number) {
@@ -104,9 +104,21 @@ export class PairLogic extends RuleLogicBase {
         super(new.target.name + tracked);
         this.tracked = tracked;
     }
-    
+
     override calculate(...values: number[]): number {
-        return 0;
+        const pairCounts: Map<number, number> = values
+            .reduce((acc: Map<number, number>, cur: number) => 
+                acc.set(cur, (acc.get(cur) || 0) + 1), 
+                new Map<number, number>());
+
+        const sorted = Array.from(pairCounts.keys())
+            .filter((key: number) => pairCounts.get(key)! >= 2)
+            .sort((a, b) => b - a);
+
+        return sorted.length >= this.tracked
+            ? sorted.slice(0, this.tracked)
+                .reduce((acc, cur) => acc + cur * 2, 0)
+            : 0;
     }
 }
 

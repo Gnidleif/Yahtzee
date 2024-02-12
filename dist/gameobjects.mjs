@@ -1,6 +1,6 @@
 import { hide, show, find, } from './utils.mjs';
 import { Die, Rule, } from './composite.mjs';
-import { DieLogic, NumberOfLogic, OfAKindLogic, StraightLogic, FullHouseLogic, ChanceLogic, YahtzeeLogic, BonusLogic, PairLogic, } from './logic.mjs';
+import { DieLogic, SumOfLogic, OfAKindLogic, StraightLogic, FullHouseLogic, ChanceLogic, YahtzeeLogic, BonusLogic, PairLogic, } from './logic.mjs';
 export class GameObject {
     htmlElement;
     constructor(element) {
@@ -20,7 +20,7 @@ export class ScoreCard extends GameObject {
         let bonusAim = 0;
         this.rules = [];
         for (let i = 1; i <= 6; i++) {
-            this.rules.push(new Rule(new NumberOfLogic(i)));
+            this.rules.push(new Rule(new SumOfLogic(i)));
             bonusAim += i;
         }
         bonusAim *= Math.ceil(dieCount / 2);
@@ -54,7 +54,7 @@ export class ScoreCard extends GameObject {
     }
     checkBonus() {
         const allNumberOfs = this.rules
-            .filter(rule => rule.checkType(NumberOfLogic));
+            .filter(rule => rule.checkType(SumOfLogic));
         const numberOfScores = allNumberOfs
             .filter(rule => rule.isFrozen)
             .map(rule => rule.score);

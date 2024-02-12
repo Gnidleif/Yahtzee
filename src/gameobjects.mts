@@ -10,7 +10,7 @@ import {
 from './composite.mjs';
 import {
     DieLogic,
-    NumberOfLogic,
+    SumOfLogic,
     OfAKindLogic,
     StraightLogic,
     FullHouseLogic,
@@ -47,7 +47,7 @@ export class ScoreCard extends GameObject {
         let bonusAim = 0;
         this.rules = [];
         for (let i = 1; i <= 6; i++) {
-            this.rules.push(new Rule(new NumberOfLogic(i)));
+            this.rules.push(new Rule(new SumOfLogic(i)));
             bonusAim += i;
         }
         bonusAim *= Math.ceil(dieCount / 2);
@@ -87,7 +87,7 @@ export class ScoreCard extends GameObject {
 
     checkBonus(): void {
         const allNumberOfs: Rule[] = this.rules
-            .filter(rule => rule.checkType(NumberOfLogic));
+            .filter(rule => rule.checkType(SumOfLogic));
 
         const numberOfScores: number[] = allNumberOfs
             .filter(rule => rule.isFrozen)

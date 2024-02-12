@@ -1,35 +1,59 @@
+import { 
+    Displayable
+} from "./display.mjs";
+
 import {
     disable,
     enable,
     hide,
     show,
+    find,
 } from "./utils.mjs";
 import {
-    GameObject,
     Dice,
     Player,
 } from "./gameobjects.mjs";
 
-export abstract class GameState extends GameObject {
-    protected nextState: GameState | null = null;
+export class StateObserver {
+    private readonly states: GameState[];
+    private currentState: number = 0;
+
+    constructor(...states: GameState[]) {
+        this.states = states;
+        this.states.forEach((state) => {
+            state.attach(this);
+            hide(state.htmlElement);
+        });
+    }
+
+    private get current(): GameState {
+        return this.states[this.currentState];
+    }
+
+    start(...args: any[]): void {
+        this.current.initialize(...args);
+        show(this.current.htmlElement);
+        this.current.display();
+    }
+
+    next(...args: any[]): void {
+        hide(this.current.htmlElement);
+        this.currentState = (this.currentState + 1) % this.states.length;
+        this.start(...args);
+    }
+}
+
+export abstract class GameState extends Displayable {
     constructor(element: HTMLElement) {
-        super(element);
+        super(element)
     }
 
-    switchState(): void {
-        hide(this.htmlElement);
-        this.nextState!.update();
-        this.nextState!.display();
-    }
-
-    abstract initialize(): void;
-    abstract attach(nextState: GameState): void;
+    abstract attach(observer: StateObserver): void;
+    abstract initialize(...args: any[]): void;
+    abstract display(): void;
 }
 
 export class Start extends GameState {
-    declare protected nextState: Game;
-
-    private readonly addSection: HTMLElement;
     private readonly addButton: HTMLButtonElement;
     private readonly startButton: HTMLButtonElement;
     private readonly playerList: HTMLOListElement;
@@ -37,10 +61,9 @@ export class Start extends GameState {
 
     constructor() {
         super(document.querySelector("#start-state")!);
-        this.addSection = this.find("#add-player");
-        this.addButton = this.find("#add-button") as HTMLButtonElement;
-        this.startButton = this.find("#start-game") as HTMLButtonElement;
-        this.playerList = this.find("#player-list") as HTMLOListElement;
+        this.addButton = find(this.element, "#add-button") as HTMLButtonElement;
+        this.startButton = find(this.element, "#start-game") as HTMLButtonElement;
+        this.playerList = find(this.element, "#player-list") as HTMLOListElement;
     }
 
     override initialize(): void {
@@ -50,9 +73,8 @@ export class Start extends GameState {
         disable(this.startButton);
     }
 
-    override attach(nextState: Game): void {
-        this.nextState = nextState;
-        this.addSection.querySelector("#player-name")!.addEventListener("input", (evt: Event) => {
+    override attach(observer: StateObserver): void {
+        this.element.querySelector("#player-name")!.addEventListener("input", (evt: Event) => {
             const target = evt.target! as HTMLInputElement;
             if (target.value.length >= 3) {
                 enable(this.addButton);
@@ -63,7 +85,7 @@ export class Start extends GameState {
         });
 
         this.addButton.addEventListener("click", () => {
-            const input = this.addSection.querySelector("#player-name") as HTMLInputElement;
+            const input = this.element.querySelector("#player-name") as HTMLInputElement;
             const name = input.value;
             input.value = "";
             this.playerNames.push(name);
@@ -74,17 +96,12 @@ export class Start extends GameState {
             this.display();
         });
 
-        this.startButton.addEventListener("click", () => {     
-            this.nextState.initialize(...this.playerNames);
-            this.switchState();
+        this.startButton.addEventListener("click", () => {
+            observer!.next(...this.playerNames);
         });
     }
 
-    update(): void {
-    }
-
     display(): void {
-        show(this.htmlElement);
         const listItems: HTMLLIElement[] = this.playerNames.map(name => {
             const li = document.createElement("li");
             li.textContent = name;
@@ -95,10 +112,6 @@ export class Start extends GameState {
 }
 
 export class Game extends GameState {
-    declare protected nextState: End;
-
-    private clickedRule: string | null = "";
-
     private readonly dice: Dice;
     private readonly maxRolls: number = 3;
     private rolls: number = 3;
@@ -111,14 +124,15 @@ export class Game extends GameState {
     private readonly endButton: HTMLButtonElement;
     private readonly scoreCardTable: HTMLTableElement;
 
+    private clickedRule: string | null = null;
+
     constructor() {
         super(document.querySelector("#game-state")!)
-        this.scoreCardTable = this.find("#score-card") as HTMLTableElement;
-        this.dice = new Dice(this.find(".dice"));
-
-        this.rollButton = this.find("#roll") as HTMLButtonElement;
-        this.nextButton = this.find("#next") as HTMLButtonElement;
-        this.endButton = this.find("#end") as HTMLButtonElement;
+        this.scoreCardTable = find(this.element, "#score-card") as HTMLTableElement;
+        this.dice = new Dice(find(this.element, ".dice"));
+        this.rollButton = find(this.element, "#roll") as HTMLButtonElement;
+        this.nextButton = find(this.element, "#next") as HTMLButtonElement;
+        this.endButton = find(this.element, "#end") as HTMLButtonElement;
     }
 
     get isDone(): boolean {
@@ -133,7 +147,7 @@ export class Game extends GameState {
         return (this.currentIndex + 1) % this.players.length;
     }
 
-    ruleClicked(ruleName: string): void {
+    onRuleClick(ruleName: string): void {
         if ((this.clickedRule && this.clickedRule !== ruleName)
         || (!this.clickedRule && this.currentPlayer.scoreState.isFrozen(ruleName))) {
             return;
@@ -146,7 +160,7 @@ export class Game extends GameState {
         this.clickedRule ? disable(this.rollButton) : enable(this.rollButton);
     }
 
-    nextClicked(): void {
+    onNextClick(): void {
         this.currentIndex = this.nextIndex;
         this.rolls = this.maxRolls;
         this.clickedRule = null;
@@ -156,16 +170,23 @@ export class Game extends GameState {
         disable(this.nextButton);
     }
 
+    update(): void {
+        this.dice.update();
+        this.currentPlayer.update(...this.dice.values);
+        this.rolls--;
+    }
+
     override initialize(...playerNames: string[]): void {
         this.clickedRule = null;
         this.currentIndex = 0;
         this.rolls = 3;
-        this.players = playerNames.map(name => new Player(this.htmlElement, this.scoreCardTable, name, this.dice.values.length));
+        this.players = playerNames.map(name => 
+            new Player(this.htmlElement, this.scoreCardTable, name, this.dice.values.length));
         disable(this.nextButton);
+        this.update();
     }
 
-    override attach(nextState: End): void {
-        this.nextState = nextState;
+    override attach(observer: StateObserver): void {
         this.rollButton.addEventListener("click", () => {
             if (this.rolls > 0) {
                 this.update();
@@ -175,34 +196,25 @@ export class Game extends GameState {
 
         this.nextButton.addEventListener("click", () => {
             if (this.isDone) {
-                this.nextState.initialize(...this.players);
-                this.switchState();
+                observer.next(...this.players);
                 return;
             }
-            this.nextClicked();
+            this.onNextClick();
         });
 
         this.endButton.addEventListener("click", () => {
-            this.nextState.initialize(...this.players);
-            this.switchState();
+            observer.next(...this.players);
         });
 
         this.scoreCardTable.addEventListener("click", (evt: Event) => {
             const target = (evt.target! as HTMLElement).parentNode as HTMLElement;
             if (target.classList.contains("rule")) {
-                this.ruleClicked(target.id);
+                this.onRuleClick(target.id);
             }
         });
     }
 
-    override update(): void {
-        this.dice.update();
-        this.currentPlayer.update(...this.dice.values);
-        this.rolls--;
-    }
-
     override display(): void {
-        show(this.htmlElement);
         if (this.rolls === 0) {
             disable(this.rollButton);
         }
@@ -218,14 +230,12 @@ export class Game extends GameState {
 }
 
 export class End extends GameState {
-    declare protected nextState: Start;
-
     private players: Player[] = [];
     private readonly winnerList: HTMLOListElement;
 
     constructor() {
         super(document.querySelector("#end-state")!);
-        this.winnerList = this.find("#winner") as HTMLOListElement;
+        this.winnerList = find(this.element, "#winner") as HTMLOListElement;
     }
 
     override initialize(...players: Player[]): void {
@@ -233,20 +243,13 @@ export class End extends GameState {
         this.winnerList.innerHTML = "";
     }
 
-    override attach(nextState: Start): void {
-        this.nextState = nextState;
-        this.find("#restart").addEventListener("click", () => {
-            this.nextState.initialize();
-            this.switchState();
+    override attach(observer: StateObserver): void {
+        find(this.element, "#restart").addEventListener("click", () => {
+            observer.next();
         });
     }
 
-    override update(): void {
-        
-    }
-
     override display(): void {
-        show(this.htmlElement);
         const listItems: HTMLLIElement[] = this.players.map(player => {
             const li = document.createElement("li");
             li.textContent = `${player.playerName} - ${player.scoreState.score}`;
