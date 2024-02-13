@@ -1,7 +1,11 @@
+import { find, } from "./utils.mjs";
 export class Displayable {
     element;
     constructor(element) {
         this.element = element;
+    }
+    find(selector) {
+        return find(this.element, selector);
     }
     get htmlElement() {
         return this.element;

@@ -1,14 +1,11 @@
-import { hide, show, find, } from './utils.mjs';
+import { hide, show, } from './utils.mjs';
 import { Die, Rule, } from './composite.mjs';
 import { DieLogic, SumOfLogic, OfAKindLogic, StraightLogic, FullHouseLogic, ChanceLogic, YahtzeeLogic, BonusLogic, PairLogic, } from './logic.mjs';
-export class GameObject {
-    htmlElement;
+import { Displayable } from './display.mjs';
+export class GameObject extends Displayable {
     constructor(element) {
-        this.htmlElement = element;
+        super(element);
         hide(this.htmlElement);
-    }
-    find(selector) {
-        return find(this.htmlElement, selector);
     }
 }
 export class ScoreCard extends GameObject {
@@ -18,22 +15,13 @@ export class ScoreCard extends GameObject {
     constructor(element, dieCount) {
         super(element);
         let bonusAim = 0;
-        this.rules = [];
-        for (let i = 1; i <= 6; i++) {
-            this.rules.push(new Rule(new SumOfLogic(i)));
+        this.rules = Array.from({ length: 6 }, (_, i) => {
             bonusAim += i;
-        }
+            return new Rule(new SumOfLogic(i + 1));
+        });
         bonusAim *= Math.ceil(dieCount / 2);
         this.bonus = new Rule(new BonusLogic(bonusAim));
-        this.rules.push(new Rule(new PairLogic(1)));
-        this.rules.push(new Rule(new PairLogic(2)));
-        this.rules.push(new Rule(new OfAKindLogic(3)));
-        this.rules.push(new Rule(new OfAKindLogic(4)));
-        this.rules.push(new Rule(new StraightLogic(4)));
-        this.rules.push(new Rule(new StraightLogic(5)));
-        this.rules.push(new Rule(new FullHouseLogic()));
-        this.rules.push(new Rule(new ChanceLogic()));
-        this.rules.push(new Rule(new YahtzeeLogic()));
+        this.rules.push(new Rule(new PairLogic(1)), new Rule(new PairLogic(2)), new Rule(new OfAKindLogic(3)), new Rule(new OfAKindLogic(4)), new Rule(new StraightLogic(4)), new Rule(new StraightLogic(5)), new Rule(new FullHouseLogic()), new Rule(new ChanceLogic()), new Rule(new YahtzeeLogic()));
     }
     get score() {
         return this.rules

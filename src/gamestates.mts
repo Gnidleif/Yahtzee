@@ -1,7 +1,6 @@
 import { 
     Displayable
 } from "./display.mjs";
-
 import {
     disable,
     enable,
@@ -61,9 +60,9 @@ export class Start extends GameState {
 
     constructor() {
         super(document.querySelector("#start-state")!);
-        this.addButton = find(this.element, "#add-button") as HTMLButtonElement;
-        this.startButton = find(this.element, "#start-game") as HTMLButtonElement;
-        this.playerList = find(this.element, "#player-list") as HTMLOListElement;
+        this.addButton = this.find("#add") as HTMLButtonElement;
+        this.startButton = this.find("#start-game") as HTMLButtonElement;
+        this.playerList = this.find("#player-list") as HTMLOListElement;
     }
 
     override initialize(): void {
@@ -195,14 +194,14 @@ export class Game extends GameState {
         });
 
         this.nextButton.addEventListener("click", () => {
+            this.onNextClick();
             if (this.isDone) {
                 observer.next(...this.players);
-                return;
             }
-            this.onNextClick();
         });
 
         this.endButton.addEventListener("click", () => {
+            this.onNextClick();
             observer.next(...this.players);
         });
 
@@ -231,20 +230,20 @@ export class Game extends GameState {
 
 export class End extends GameState {
     private players: Player[] = [];
-    private readonly winnerList: HTMLOListElement;
+    private readonly highScoreList: HTMLOListElement;
 
     constructor() {
         super(document.querySelector("#end-state")!);
-        this.winnerList = find(this.element, "#winner") as HTMLOListElement;
+        this.highScoreList = this.find("#high-score") as HTMLOListElement;
     }
 
     override initialize(...players: Player[]): void {
         this.players = players.sort((a, b) => b.scoreState.score - a.scoreState.score);
-        this.winnerList.innerHTML = "";
+        this.highScoreList.innerHTML = "";
     }
 
     override attach(observer: StateObserver): void {
-        find(this.element, "#restart").addEventListener("click", () => {
+        this.find("#restart").addEventListener("click", () => {
             observer.next();
         });
     }
@@ -255,6 +254,6 @@ export class End extends GameState {
             li.textContent = `${player.playerName} - ${player.scoreState.score}`;
             return li;
         });
-        this.winnerList.replaceChildren(...listItems);
+        this.highScoreList.replaceChildren(...listItems);
     }
 }

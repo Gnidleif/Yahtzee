@@ -5,16 +5,16 @@
         <script src="./dist/main.mjs" type="module" defer></script>
     </head>
     <body>
-        <section class="game-state" id="start-state">
+        <section class="state-container" id="start-state">
             <h1>Start game</h1>
             <section id="add-player">
                 <input type="text" id="player-name" placeholder="Player name">
-                <button id="add-button">Add player</button>
+                <button id="add">Add player</button>
             </section>
             <ol id="player-list"></ol>
             <button id="start-game">Start game</button>
         </section>
-        <section class="game-state" id="game-state">
+        <section class="state-container" id="game-state">
             <h1>Yahtzee</h1>
             <h2 id="player-name">Template Name</h2>
             <h3 id="player-score">Template Score</h3>
@@ -24,9 +24,9 @@
             <button id="next">Next</button>
             <button id="end">End game</button>
         </section>
-        <section class="game-state" id="end-state">
+        <section class="state-container" id="end-state">
             <h1>Game over</h1>
-            <ol id="winner"></ol>
+            <ol id="high-score"></ol>
             <button id="restart">Restart</button>
         </section>
     </body>

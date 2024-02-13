@@ -37,9 +37,9 @@ export class Start extends GameState {
     playerNames = [];
     constructor() {
         super(document.querySelector("#start-state"));
-        this.addButton = find(this.element, "#add-button");
-        this.startButton = find(this.element, "#start-game");
-        this.playerList = find(this.element, "#player-list");
+        this.addButton = this.find("#add");
+        this.startButton = this.find("#start-game");
+        this.playerList = this.find("#player-list");
     }
     initialize() {
         this.playerNames = [];
@@ -151,13 +151,13 @@ export class Game extends GameState {
             }
         });
         this.nextButton.addEventListener("click", () => {
+            this.onNextClick();
             if (this.isDone) {
                 observer.next(...this.players);
-                return;
             }
-            this.onNextClick();
         });
         this.endButton.addEventListener("click", () => {
+            this.onNextClick();
             observer.next(...this.players);
         });
         this.scoreCardTable.addEventListener("click", (evt) => {
@@ -182,17 +182,17 @@ export class Game extends GameState {
 }
 export class End extends GameState {
     players = [];
-    winnerList;
+    highScoreList;
     constructor() {
         super(document.querySelector("#end-state"));
-        this.winnerList = find(this.element, "#winner");
+        this.highScoreList = this.find("#high-score");
     }
     initialize(...players) {
         this.players = players.sort((a, b) => b.scoreState.score - a.scoreState.score);
-        this.winnerList.innerHTML = "";
+        this.highScoreList.innerHTML = "";
     }
     attach(observer) {
-        find(this.element, "#restart").addEventListener("click", () => {
+        this.find("#restart").addEventListener("click", () => {
             observer.next();
         });
     }
@@ -202,6 +202,6 @@ export class End extends GameState {
             li.textContent = `${player.playerName} - ${player.scoreState.score}`;
             return li;
         });
-        this.winnerList.replaceChildren(...listItems);
+        this.highScoreList.replaceChildren(...listItems);
     }
 }

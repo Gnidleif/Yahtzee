@@ -1,8 +1,16 @@
+import {
+    find,
+} from "./utils.mjs";
+
 export abstract class Displayable {
     protected readonly element: HTMLElement;
 
     constructor(element: HTMLElement) {
         this.element = element;
+    }
+
+    protected find(selector: string): HTMLElement {
+        return find(this.element, selector);
     }
 
     get htmlElement(): HTMLElement {
@@ -26,12 +34,12 @@ export class DieDisplay extends Displayable {
         if (dotCount < 1 || dotCount > 6) {
             throw new RangeError("Dot count must be between 1 and 6");
         }
+        
         this.dots = Array.from({ length: dotCount }, () => {
             const dot: HTMLDivElement = document.createElement("div");
             dot.classList.add("dot");
             return dot;
         });
-
         this.element.replaceChildren(...this.dots);
     }
 }

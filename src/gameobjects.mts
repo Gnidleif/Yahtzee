@@ -20,17 +20,12 @@ import {
     PairLogic,
 }
 from './logic.mjs';
+import { Displayable } from './display.mjs';
 
-export abstract class GameObject {
-    protected readonly htmlElement: HTMLElement;
-
+export abstract class GameObject extends Displayable {
     constructor(element: HTMLElement) {
-        this.htmlElement = element;
+        super(element);
         hide(this.htmlElement);
-    }
-
-    find(selector: string): HTMLElement {
-        return find(this.htmlElement, selector);
     }
 
     abstract update(): void;
@@ -45,22 +40,24 @@ export class ScoreCard extends GameObject {
     constructor(element: HTMLTableElement, dieCount: number) {
         super(element);
         let bonusAim = 0;
-        this.rules = [];
-        for (let i = 1; i <= 6; i++) {
-            this.rules.push(new Rule(new SumOfLogic(i)));
+        this.rules = Array.from({ length: 6 }, (_, i) => 
+        {
             bonusAim += i;
-        }
+            return new Rule(new SumOfLogic(i + 1));
+        });
         bonusAim *= Math.ceil(dieCount / 2);
         this.bonus = new Rule(new BonusLogic(bonusAim));
-        this.rules.push(new Rule(new PairLogic(1)));
-        this.rules.push(new Rule(new PairLogic(2)));
-        this.rules.push(new Rule(new OfAKindLogic(3)));
-        this.rules.push(new Rule(new OfAKindLogic(4)));
-        this.rules.push(new Rule(new StraightLogic(4)));
-        this.rules.push(new Rule(new StraightLogic(5)));
-        this.rules.push(new Rule(new FullHouseLogic()));
-        this.rules.push(new Rule(new ChanceLogic()));
-        this.rules.push(new Rule(new YahtzeeLogic()));
+        this.rules.push(
+            new Rule(new PairLogic(1)),            
+            new Rule(new PairLogic(2)),
+            new Rule(new OfAKindLogic(3)),
+            new Rule(new OfAKindLogic(4)),
+            new Rule(new StraightLogic(4)),
+            new Rule(new StraightLogic(5)),
+            new Rule(new FullHouseLogic()),
+            new Rule(new ChanceLogic()),
+            new Rule(new YahtzeeLogic()),
+        );
     }
 
     get score(): number {
